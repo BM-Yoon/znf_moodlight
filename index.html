@@ -168,24 +168,37 @@ tr:last-child td{border-bottom:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const CSV_PROD = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfs-nhUbpSBqH9RoQxlI3siDEibhqoXQJx8Y6BnLdp1q3gyFWsyY-pSTsNKHGA4Qik-6UA5KYQ3rAq/pub?output=csv';
-const CSV_SALE = '';
+/* ════════════════════════════════════════════════════════════
+   구글 시트 URL 설정
+   - SHEET_ID : 스프레드시트 고유 ID
+   - GID_A    : 첫 번째 탭 gid  (0 = 시트1 기본값)
+   - GID_B    : 두 번째 탭 gid  (사용자 제공값)
+   ⚠ 구글 시트 → 파일 → 웹에 게시 → 전체문서 + CSV → 게시 필수
+════════════════════════════════════════════════════════════ */
+const SHEET_ID = '1l9qMmkxT7t2G0mz4P2PjiTDyTze8AVbC8GUnGcT9p6U';
+const GID_A    = '0';           // 기본 첫 번째 탭
+const GID_B    = '485466248';   // 사용자 제공 탭
 
+const BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv`;
+const CSV_A = `${BASE}&gid=${GID_A}`;
+const CSV_B = `${BASE}&gid=${GID_B}`;
+
+/* ── 헤더 키워드 맵 (컬럼명이 달라도 자동 매칭) ── */
 const HDR = {
-  theme:    ['테마','theme'],
-  code:     ['88코드','코드','code','product_code','제품코드','barcode'],
-  name:     ['상품명','제품명','name'],
-  gubu:     ['구분자','gubu','category','구분'],
-  otb_off:  ['오프라인 otb','오프라인otb','offline otb','offline_otb'],
-  otb_mall: ['통합몰 otb','통합몰otb','mall otb','mall_otb'],
-  otb_smt:  ['스스 otb','스마트스토어 otb','스마트스토어otb','smt_otb','스마트 otb'],
-  otb_all:  ['총 otb','총  otb','total otb','total_otb','총otb'],
-  date:     ['날짜','date','일자'],
-  channel:  ['판매채널','채널','channel','세부채널'],
-  sale_code:['제품코드','88코드','코드','code','product_code'],
-  qty:      ['매출수량','수량','qty','quantity','판매수량'],
-  sales:    ['매출금액','금액','sales','amount','판매금액'],
-  sale_gubu:['구분자','gubu','category'],
+  theme:    ['테마','theme','ip','아이피','브랜드'],
+  code:     ['88코드','코드','code','product_code','제품코드','barcode','바코드','상품코드','item_code'],
+  name:     ['상품명','제품명','name','item_name','자재내역','품명'],
+  gubu:     ['구분자','gubu','category','구분','분류','상품분류'],
+  otb_off:  ['오프라인 otb','오프라인otb','offline otb','offline_otb','오프라인'],
+  otb_mall: ['통합몰 otb','통합몰otb','mall otb','mall_otb','통합몰otb'],
+  otb_smt:  ['스스 otb','스마트스토어 otb','스마트스토어otb','smt_otb','스마트 otb','smart otb','스마트스토어'],
+  otb_all:  ['총 otb','총  otb','total otb','total_otb','총otb','totiotb','총물량otb'],
+  date:     ['날짜','date','일자','판매일','주문일'],
+  channel:  ['판매채널','채널','channel','세부채널','sub_channel','subchannel'],
+  sale_code:['제품코드','88코드','코드','code','product_code','item_code','barcode'],
+  qty:      ['매출수량','수량','qty','quantity','판매수량','sales_qty','주문수량'],
+  sales:    ['매출금액','금액','sales','amount','판매금액','sales_amount','매출액'],
+  sale_gubu:['구분자','gubu','category','구분','분류'],
 };
 
 function detectHeaders(rows) {
@@ -358,21 +371,80 @@ function showErr(msg, detail) {
   ['ch-body','dl-body','pr-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
+/* ────────────────────────────────────────────────────────────
+   행 타입 자동 분류
+   - 날짜 + 수량 컬럼 모두 있으면 → 'sales'
+   - OTB 관련 컬럼 있으면      → 'product'
+────────────────────────────────────────────────────────────── */
+function classifyTab(rows) {
+  if (!rows.length) return 'empty';
+  const keys = Object.keys(rows[0]).map(k => k.toLowerCase().replace(/\s+/g,''));
+  const hasDate  = keys.some(k => ['날짜','date','일자','판매일','주문일'].includes(k));
+  const hasQty   = keys.some(k => ['매출수량','수량','qty','quantity','판매수량','주문수량'].includes(k));
+  const hasSales = keys.some(k => ['매출금액','금액','sales','amount','판매금액'].includes(k));
+  const hasOtb   = keys.some(k => k.includes('otb'));
+  const hasCode  = keys.some(k => ['88코드','제품코드','코드','code','barcode'].includes(k));
+
+  // 날짜 + 수량/금액 → 매출 시트
+  if (hasDate && (hasQty || hasSales)) return 'sales';
+  // OTB 컬럼 → 제품 시트
+  if (hasOtb) return 'product';
+  // 코드만 있으면 제품 시트로 추정
+  if (hasCode && !hasDate) return 'product';
+  return 'unknown';
+}
+
 async function init() {
   setStatus('spin','데이터 불러오는 중');
-  let prodRows=[],saleRows=[];
+
+  /* ── 두 탭 동시 fetch ── */
+  let rowsA=[], rowsB=[];
   try {
-    const promises=[fetchCSV(CSV_PROD)];
-    if (CSV_SALE) promises.push(fetchCSV(CSV_SALE));
-    const results=await Promise.all(promises);
-    prodRows=results[0]||[];
-    saleRows=results[1]||[];
+    [rowsA, rowsB] = await Promise.all([
+      fetchCSV(CSV_A).catch(()=>[]),
+      fetchCSV(CSV_B).catch(()=>[]),
+    ]);
   } catch(e) {
-    showErr('CSV 불러오기 실패 — 구글 시트 웹에 게시(CSV) 설정 확인',e.message);
+    showErr('CSV 불러오기 실패',
+      `${e.message}\n\n해결:\n구글 시트 → 파일 → 웹에 게시 → 전체 문서 + CSV → 게시`);
     return;
   }
 
-  if (!prodRows.length) { showErr('출시상품데이터가 비어있습니다'); return; }
+  if (!rowsA.length && !rowsB.length) {
+    showErr('두 탭 모두 비어있습니다',
+      `GID_A(${GID_A}) / GID_B(${GID_B}) 모두 데이터 없음\n` +
+      `구글 시트가 웹에 게시되어 있는지 확인해주세요`);
+    return;
+  }
+
+  /* ── 탭 타입 판별 → prodRows / saleRows 배정 ── */
+  const typeA = classifyTab(rowsA);
+  const typeB = classifyTab(rowsB);
+
+  let prodRows=[], saleRows=[];
+
+  if (typeA==='product' && typeB==='sales')  { prodRows=rowsA; saleRows=rowsB; }
+  else if (typeA==='sales' && typeB==='product') { prodRows=rowsB; saleRows=rowsA; }
+  else if (typeA==='product')                { prodRows=rowsA; saleRows=rowsB; }
+  else if (typeB==='product')                { prodRows=rowsB; saleRows=rowsA; }
+  else if (typeA==='sales')                  { saleRows=rowsA; prodRows=rowsB; }
+  else if (typeB==='sales')                  { saleRows=rowsB; prodRows=rowsA; }
+  else {
+    // 구분 불가 → 크기 큰 쪽을 매출로 간주
+    prodRows = rowsA.length >= rowsB.length ? rowsA : rowsB;
+    saleRows = rowsA.length >= rowsB.length ? rowsB : rowsA;
+  }
+
+  /* 상태바에 감지 결과 표시 (로딩 완료 전까지) */
+  setStatus('spin',
+    `탭A(${GID_A}): ${typeA}(${rowsA.length}행) · 탭B(${GID_B}): ${typeB}(${rowsB.length}행)`);
+
+  if (!prodRows.length && !saleRows.length) {
+    showErr('데이터를 인식하지 못했습니다',
+      `탭A 헤더: ${rowsA.length?Object.keys(rowsA[0]).join(', '):'(없음)'}\n` +
+      `탭B 헤더: ${rowsB.length?Object.keys(rowsB[0]).join(', '):'(없음)'}`);
+    return;
+  }
 
   const pH=detectHeaders(prodRows);
   const sH=saleRows.length?detectHeaders(saleRows):{};
