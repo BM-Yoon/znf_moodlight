@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZNF_무드등 (5/15) — Business Management</title>
+<title>신상품 매출 리포트 — Business Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* ─────────────── RESET & BASE ─────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:'Noto Sans KR','Apple SD Gothic Neo',-apple-system,sans-serif;
@@ -15,92 +14,82 @@ body{
 }
 .wrap{max-width:960px;margin:0 auto}
 
-/* ─────────────── HEADER ─────────────── */
+/* ─ 헤더 ─ */
 .page-hd{margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid #EFEFEF}
-.page-title{font-size:21px;font-weight:700;color:#1E2029;margin-bottom:4px}
+.page-title{font-size:21px;font-weight:700;color:#1E2029;margin-bottom:4px;min-height:30px}
 .page-team{font-size:12px;color:#8A8FA3}
 
-/* ─────────────── KPI GRID ─────────────── */
+/* ─ KPI 카드 ─ */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:36px}
 @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 .kpi-card{background:#fff;border:1px solid #EFEFEF;border-radius:10px;padding:18px 20px}
 .kpi-lbl{font-size:11px;color:#8A8FA3;margin-bottom:8px}
 .kpi-val{font-size:22px;font-weight:700;color:#1E2029;min-height:33px}
 .kpi-val.purple{color:#534AB7}
-.kpi-sub{font-size:10px;color:#8A8FA3;margin-top:4px;min-height:15px}
+.kpi-sub{font-size:10px;color:#8A8FA3;margin-top:4px;min-height:14px}
 
-/* ─────────────── SECTION CARD ─────────────── */
+/* ─ 섹션 카드 ─ */
 .sec-card{background:#fff;border:1px solid #EFEFEF;border-radius:12px;padding:26px 28px;margin-bottom:20px}
 
-/* ─────────────── SECTION HEADER ─────────────── */
+/* ─ 섹션 헤더 ─ */
 .sec-hd{margin-bottom:20px}
 .sec-hd-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.sec-badge{
-  background:#F5E6E9;color:#9B2236;font-size:10px;font-weight:700;
-  padding:3px 12px;border-radius:20px;letter-spacing:.08em;white-space:nowrap;
-}
+.sec-badge{background:#F5E6E9;color:#9B2236;font-size:10px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:.08em;white-space:nowrap}
 .sec-title{font-size:15px;font-weight:700;color:#1E2029}
 .sec-line{height:.5px;background:#9B2236}
 
-/* ─────────────── TABLE ─────────────── */
+/* ─ 테이블 ─ */
 table{width:100%;border-collapse:collapse}
-th{
-  font-size:10px;color:#8A8FA3;font-weight:500;text-align:right;
-  padding:5px 10px 7px;border-bottom:1px solid #EFEFEF;white-space:nowrap;
-}
+th{font-size:10px;color:#8A8FA3;font-weight:500;text-align:right;padding:5px 10px 7px;border-bottom:1px solid #EFEFEF;white-space:nowrap}
 th.L{text-align:left}
-td{
-  font-size:12px;padding:7px 10px;text-align:right;
-  color:#1E2029;border-bottom:.5px solid #EFEFEF;
-}
+td{font-size:12px;padding:7px 10px;text-align:right;color:#1E2029;border-bottom:.5px solid #EFEFEF}
 td.L{text-align:left}
 td.sm{font-size:11px}
 .row-sub td{color:#8A8FA3;font-size:11px}
-.row-sub td:first-child{text-align:left}
+.row-sub td.L{text-align:left}
 .row-total td{font-weight:700;border-top:1px solid #EFEFEF;border-bottom:none;font-size:11px}
-.row-total td:first-child{text-align:left}
+.row-total td.L{text-align:left}
 .row-hi{background:#FEF7F7}
-.row-hi .hi-st{color:#9B2236;font-weight:700}
+.hi-st{color:#9B2236;font-weight:700}
 .prod-nm{font-size:11px;color:#8A8FA3;max-width:200px;white-space:normal;word-break:keep-all;line-height:1.45}
 .tbl-scroll{overflow-x:auto}
-.tbl-scroll table{min-width:740px}
+.tbl-scroll table{min-width:780px}
 
-/* ─────────────── CHANNEL BADGE ─────────────── */
+/* ─ 채널 뱃지 ─ */
 .b-off {display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#FAECE7;color:#993C1D}
 .b-mall{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#E1F5EE;color:#0F6E56}
 .b-smt {display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#E6F1FB;color:#185FA5}
 
-/* ─────────────── DAILY LAYOUT ─────────────── */
+/* ─ 날짜별 레이아웃 ─ */
 .daily-wrap{display:flex;gap:32px;align-items:flex-start}
 .daily-chart{flex:1.5}
 .daily-tbl{flex:1;padding-top:8px}
 @media(max-width:680px){.daily-wrap{flex-direction:column}.daily-chart,.daily-tbl{flex:none;width:100%}}
 .chart-box{position:relative;width:100%;height:230px}
 
-/* ─────────────── INSIGHT ─────────────── */
-.insight{
-  margin-top:18px;padding:10px 14px;
-  border-left:3px solid #EFEFEF;
-  font-size:11px;color:#8A8FA3;line-height:1.8;
-  border-radius:0 6px 6px 0;
-}
+/* ─ 인사이트 ─ */
+.insight{margin-top:18px;padding:10px 14px;border-left:3px solid #EFEFEF;font-size:11px;color:#8A8FA3;line-height:1.8;border-radius:0 6px 6px 0}
 .insight.on{border-left-color:#9B2236;background:#FDFAF9;color:#1E2029}
 .insight strong{color:#9B2236}
 
-/* ─────────────── SKELETON ─────────────── */
-.sk{
-  display:inline-block;height:13px;border-radius:3px;
-  background:linear-gradient(90deg,#EFEFEF 25%,#F9F8F6 50%,#EFEFEF 75%);
-  background-size:200% 100%;animation:shimmer 1.4s infinite;
-}
+/* ─ 스켈레톤 ─ */
+.sk{display:inline-block;border-radius:3px;background:linear-gradient(90deg,#EFEFEF 25%,#F9F8F6 50%,#EFEFEF 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.sk-val{height:28px;border-radius:4px}
-.sk-sub{height:11px;margin-top:5px;border-radius:3px}
 
-/* ─────────────── ERROR ─────────────── */
-.err{text-align:center;color:#9B2236;font-size:12px;padding:20px;border-radius:6px;background:#FFF5F5}
+/* ─ 에러 ─ */
+.err{text-align:center;color:#9B2236;font-size:12px;padding:20px;background:#FFF5F5;border-radius:6px}
 
-/* ─────────────── FOOTER ─────────────── */
+/* ─ 상태 바 ─ */
+#status-bar{font-size:11px;color:#8A8FA3;margin-bottom:16px;min-height:18px;display:flex;align-items:center;gap:6px}
+#status-bar.ok{color:#0F6E56}
+#status-bar.fail{color:#9B2236}
+.dot{width:7px;height:7px;border-radius:50%;background:#D1D5DB;flex-shrink:0}
+.dot.ok{background:#0F6E56}
+.dot.fail{background:#9B2236}
+.dot.spin{background:transparent;border:2px solid #8A8FA3;border-top-color:#1E2029;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─ 푸터 ─ */
 .footer{margin-top:28px;font-size:10px;color:#C8CBD2;text-align:right}
 </style>
 </head>
@@ -109,31 +98,36 @@ td.sm{font-size:11px}
 
   <!-- 헤더 -->
   <div class="page-hd">
-    <div class="page-title">JUG Office &amp; 스튜디오 천재 1차 (5/7)</div>
+    <div class="page-title" id="page-title">
+      <span class="sk" style="width:280px;height:26px;display:inline-block"></span>
+    </div>
     <div class="page-team">Business Management</div>
   </div>
+
+  <!-- 상태 바 -->
+  <div id="status-bar"><span class="dot spin"></span><span id="status-msg">데이터 로딩 중</span></div>
 
   <!-- KPI 카드 -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-lbl">총 물량 (OTB)</div>
-      <div class="kpi-val" id="v-otb"><span class="sk sk-val" style="width:80px"></span></div>
+      <div class="kpi-lbl">총 OTB</div>
+      <div class="kpi-val" id="v-otb"><span class="sk" style="width:80px;height:28px;display:inline-block"></span></div>
       <div class="kpi-sub">EA</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl">총 매출 수량</div>
-      <div class="kpi-val" id="v-qty"><span class="sk sk-val" style="width:60px"></span></div>
+      <div class="kpi-val" id="v-qty"><span class="sk" style="width:60px;height:28px;display:inline-block"></span></div>
       <div class="kpi-sub">EA</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl">총 매출 금액</div>
-      <div class="kpi-val" id="v-sales"><span class="sk sk-val" style="width:100px"></span></div>
-      <div class="kpi-sub" id="v-sales-raw"><span class="sk sk-sub" style="width:90px"></span></div>
+      <div class="kpi-val" id="v-sales"><span class="sk" style="width:100px;height:28px;display:inline-block"></span></div>
+      <div class="kpi-sub" id="v-sales-raw"><span class="sk" style="width:90px;height:11px;display:inline-block;margin-top:4px"></span></div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl">전체 Sell-thru</div>
-      <div class="kpi-val purple" id="v-st"><span class="sk sk-val" style="width:60px"></span></div>
-      <div class="kpi-sub" id="v-st-sub"><span class="sk sk-sub" style="width:110px"></span></div>
+      <div class="kpi-val purple" id="v-st"><span class="sk" style="width:60px;height:28px;display:inline-block"></span></div>
+      <div class="kpi-sub" id="v-st-sub"><span class="sk" style="width:110px;height:11px;display:inline-block;margin-top:4px"></span></div>
     </div>
   </div>
 
@@ -149,9 +143,9 @@ td.sm{font-size:11px}
         <th>OTB (EA)</th><th>매출 수량 (EA)</th><th>매출 금액</th><th>Sell-thru</th>
       </tr></thead>
       <tbody id="ch-body">
-        <tr><td colspan="5"><span class="sk" style="width:100%;display:block;height:32px"></span></td></tr>
-        <tr><td colspan="5"><span class="sk" style="width:88%;display:block;height:32px"></span></td></tr>
-        <tr><td colspan="5"><span class="sk" style="width:94%;display:block;height:32px"></span></td></tr>
+        <tr><td colspan="5"><span class="sk" style="width:100%;height:32px;display:block"></span></td></tr>
+        <tr><td colspan="5"><span class="sk" style="width:88%;height:32px;display:block;margin-top:4px"></span></td></tr>
+        <tr><td colspan="5"><span class="sk" style="width:94%;height:32px;display:block;margin-top:4px"></span></td></tr>
       </tbody>
     </table>
   </div>
@@ -165,7 +159,7 @@ td.sm{font-size:11px}
     <div class="daily-wrap">
       <div class="daily-chart">
         <div class="chart-box">
-          <canvas id="daily-chart" role="img" aria-label="날짜별 매출 금액 막대 차트">로딩 중</canvas>
+          <canvas id="daily-chart" role="img" aria-label="날짜별 매출 금액 막대 차트"></canvas>
         </div>
       </div>
       <div class="daily-tbl">
@@ -175,10 +169,10 @@ td.sm{font-size:11px}
             <th>매출 수량 (EA)</th><th>매출 금액</th><th>Sell-thru</th>
           </tr></thead>
           <tbody id="dl-body">
-            <tr><td colspan="4"><span class="sk" style="width:100%;display:block;height:28px"></span></td></tr>
+            <tr><td colspan="4"><span class="sk" style="width:100%;height:28px;display:block"></span></td></tr>
           </tbody>
         </table>
-        <div class="insight" id="dl-insight"><span class="sk" style="width:85%;display:block"></span></div>
+        <div class="insight" id="dl-insight"><span class="sk" style="width:85%;height:13px;display:block"></span></div>
       </div>
     </div>
   </div>
@@ -191,95 +185,130 @@ td.sm{font-size:11px}
     </div>
     <div class="tbl-scroll">
       <table>
-        <thead><tr>
-          <th class="L" style="min-width:190px">구분자</th>
-          <th>OTB (EA)</th><th>총 수량 (EA)</th><th>총 금액</th>
-          <th>오프라인 (EA)</th><th>통합몰 (EA)</th><th>스마트스토어 (EA)</th><th>Sell-thru</th>
-        </tr></thead>
+        <thead>
+          <tr>
+            <th class="L" style="min-width:180px" rowspan="2">구분자</th>
+            <th rowspan="2">총 OTB</th>
+            <th rowspan="2">총 매출수량</th>
+            <th rowspan="2">총 매출금액</th>
+            <th rowspan="2">Sell-thru</th>
+            <th colspan="3" style="text-align:center;border-left:1px solid #EFEFEF;padding-bottom:4px">채널별 매출 수량 (EA)</th>
+          </tr>
+          <tr>
+            <th style="border-left:1px solid #EFEFEF">오프라인</th>
+            <th>통합몰</th>
+            <th>스마트스토어</th>
+          </tr>
+        </thead>
         <tbody id="pr-body">
-          <tr><td colspan="8"><span class="sk" style="width:100%;display:block;height:28px"></span></td></tr>
-          <tr><td colspan="8"><span class="sk" style="width:91%;display:block;height:28px"></span></td></tr>
-          <tr><td colspan="8"><span class="sk" style="width:96%;display:block;height:28px"></span></td></tr>
+          <tr><td colspan="8"><span class="sk" style="width:100%;height:28px;display:block"></span></td></tr>
+          <tr><td colspan="8"><span class="sk" style="width:91%;height:28px;display:block;margin-top:4px"></span></td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="footer">Business Management · JUG Office &amp; 스튜디오 천재 1차 (5/7)</div>
+  <div class="footer" id="footer-txt">Business Management</div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════
-  Chart.js
-════════════════════════════════════════════════════════════ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
 <script>
-/* ════════════════════════════════════════════════════════════════
-   ★  여기에 구글 시트 CSV 주소 하나만 입력하세요
-   ────────────────────────────────────────────────────────────────
-   변환 방법:
-     원본 URL  → https://docs.google.com/spreadsheets/d/[ID]/edit#gid=[GID]
-     CSV URL   → https://docs.google.com/spreadsheets/d/[ID]/export?format=csv&gid=[GID]
+/* ═══════════════════════════════════════════════════════════════
+   ★  구글 시트 CSV 주소 — 이 값만 교체하면 됩니다
+   ───────────────────────────────────────────────────────────────
+   구글 시트 → 파일 → 웹에 게시 → CSV 형식 → URL 복사
+   (pub?output=csv 형식이어야 GitHub Pages에서 CORS 없이 동작합니다)
 
-   시트 공유 설정: "링크가 있는 모든 사용자" → 뷰어
-
-   ────────────────────────────────────────────────────────────────
-   시트 컬럼 구조 (첫 행 = 헤더, 빈 셀은 공백으로 두면 됩니다):
-
-   section  | channel      | date | name              | otb   | qty | sales   | offline | mall | smart | sellthru | highlight
-   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-   channel  | 오프라인     |      |                   | 33258 | 372 | 3250000 |         |      |       | 1.1      |
-   channel  | 통합몰       |      |                   | 4240  | 178 | 2440000 |         |      |       | 4.2      |
-   channel  | 스마트스토어 |      |                   | 4930  | 114 | 1670000 |         |      |       | 2.3      |
-   daily    |              | 5/7  |                   |       | 664 | 7363299 |         |      |       | 1.6      |
-   product  |              |      | OFFICE 플러시 키링 | 6000  | 159 | 2110000 | 66      | 56   | 37    | 2.7      | 0
-   product  |              |      | OFFICE 마그넷 세트 | 500   | 53  | 850000  | 21      | 21   | 11    | 10.6     | 1
-
-   ※ section 값: channel / daily / product  (소문자 영문)
-   ※ sales 단위: 원 (예: 3250000)
-   ※ highlight: 1 = 강조(빨간 배경), 0 또는 빈칸 = 기본
-════════════════════════════════════════════════════════════════ */
+   시트 컬럼 구조 (두 가지 섹션을 한 시트에 혼합):
+     [출시상품] section=product  → 테마|88코드|상품명|구분자|판매가|오프라인OTB|통합몰OTB|스마트스토어OTB|총OTB
+     [매출데이터] section=sales  → 날짜|채널|세부채널|제품코드|자재내역|매출수량|매출금액
+   또는 헤더로 자동 감지 (section 컬럼 없어도 동작)
+═══════════════════════════════════════════════════════════════ */
 const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGJp-jXjVymSFfp3yG_HQzt4KVq6gmqHGntzC-jwK5g42cBHhux-6tyifdiAN7ag/pub?output=csv';
 
-/* ──────────────────────────────────────────────────────────────
+/* ───────────────────────────────────────────────────────────────
    유틸
-────────────────────────────────────────────────────────────── */
+─────────────────────────────────────────────────────────────── */
 function parseCSV(text) {
-  const raw   = text.trim().split('\n');
-  const heads = raw[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-  return raw.slice(1)
-    .map(line => line.split(',').map(v => v.trim().replace(/^"|"$/g, '')))
-    .filter(row => row.some(v => v))
-    .map(row => Object.fromEntries(heads.map((h, i) => [h, row[i] ?? ''])));
+  const lines   = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1)
+    .map(line => {
+      // 쉼표 분리 (따옴표 안 쉼표 보호)
+      const cols = [];
+      let cur = '', inQ = false;
+      for (const ch of line) {
+        if (ch === '"') { inQ = !inQ; continue; }
+        if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+        cur += ch;
+      }
+      cols.push(cur.trim());
+      return Object.fromEntries(headers.map((h, i) => [h, cols[i] ?? '']));
+    })
+    .filter(r => Object.values(r).some(v => v !== ''));
 }
 
-const n   = v  => parseFloat(String(v).replace(/,/g, '')) || 0;
-const i   = v  => parseInt(String(v).replace(/,/g, ''))   || 0;
-const fmt = won => {
-  if (!won || won === 0) return '-';
-  return (won / 1_000_000).toFixed(2) + '백만';
-};
-const fmtN  = v => Number(v).toLocaleString('ko-KR');
-const fmtSt = v => v > 0 ? Number(v).toFixed(1) + '%' : '-';
+// 숫자 파싱
+const toN = v => parseFloat(String(v).replace(/,/g, '')) || 0;
+const toI = v => Math.round(toN(v));
 
-/* ──────────────────────────────────────────────────────────────
-   Chart.js 인스턴스
-────────────────────────────────────────────────────────────── */
+// 포맷
+const fmtSales = won => (!won || won === 0) ? '-' : (won / 1_000_000).toFixed(2) + '백만';
+const fmtN     = v => Number(v).toLocaleString('ko-KR');
+const fmtSt    = v => v > 0 ? v.toFixed(1) + '%' : '-';
+
+// 날짜 파싱 → MM/DD 표시
+// 구글시트 CSV export 시 날짜 형식: "2026-05-15" / "5/15/2026" / 엑셀 시리얼(숫자) 등
+function parseDate(raw) {
+  if (!raw) return '-';
+  const s = String(raw).trim();
+
+  // 숫자형 시리얼 (엑셀 기준: 1900-01-01 = 1)
+  if (/^\d{4,5}$/.test(s)) {
+    const base = new Date(1899, 11, 30);
+    base.setDate(base.getDate() + parseInt(s));
+    return `${String(base.getMonth() + 1).padStart(2, '0')}/${String(base.getDate()).padStart(2, '0')}`;
+  }
+  // ISO: 2026-05-15
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[2]}/${iso[3]}`;
+  // M/D/YYYY 또는 MM/DD/YYYY
+  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?/);
+  if (mdy) return `${String(mdy[1]).padStart(2,'0')}/${String(mdy[2]).padStart(2,'0')}`;
+  // 이미 MM/DD 형태
+  return s.slice(0, 5);
+}
+
+/* ───────────────────────────────────────────────────────────────
+   상태 바
+─────────────────────────────────────────────────────────────── */
+function setStatus(type, msg) {
+  const bar  = document.getElementById('status-bar');
+  const dot  = bar.querySelector('.dot');
+  const txt  = document.getElementById('status-msg');
+  dot.className = 'dot ' + type;
+  bar.className = type;
+  txt.textContent = msg;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   Chart.js
+─────────────────────────────────────────────────────────────── */
 let chartInst = null;
+const BAR_COLORS = ['#1E2029','#555A6E','#8A8FA3','#B0B5C1','#D1D5DB'];
 
-const TOP_LABEL_PLUGIN = {
+const TOP_LABEL = {
   id: 'topLabel',
   afterDatasetsDraw(chart) {
     const { ctx, data } = chart;
-    const meta = chart.getDatasetMeta(0);
-    meta.data.forEach((bar, idx) => {
-      const val = data.datasets[0].data[idx];
-      if (val == null) return;
+    chart.getDatasetMeta(0).data.forEach((bar, idx) => {
+      const v = data.datasets[0].data[idx];
+      if (v == null) return;
       ctx.save();
-      ctx.font      = '600 11px Noto Sans KR, sans-serif';
+      ctx.font      = '600 11px "Noto Sans KR", sans-serif';
       ctx.fillStyle = '#1E2029';
       ctx.textAlign = 'center';
-      ctx.fillText(val.toFixed(2) + '백만', bar.x, bar.y - 7);
+      ctx.fillText(v.toFixed(2) + '백만', bar.x, bar.y - 7);
       ctx.restore();
     });
   }
@@ -288,204 +317,289 @@ const TOP_LABEL_PLUGIN = {
 function drawChart(labels, values) {
   const ctx = document.getElementById('daily-chart').getContext('2d');
   if (chartInst) { chartInst.destroy(); chartInst = null; }
-
-  const BAR_COLORS = ['#1E2029','#555A6E','#8A8FA3','#B0B5C1','#D1D5DB'];
-  const colors = labels.map((_, k) => BAR_COLORS[Math.min(k, BAR_COLORS.length - 1)]);
-
   chartInst = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: colors,
+        backgroundColor: labels.map((_, k) => BAR_COLORS[Math.min(k, BAR_COLORS.length - 1)]),
         borderRadius: 4,
         borderSkipped: false,
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) + '백만' } }
       },
       scales: {
-        x: {
-          grid: { display: false },
-          border: { display: false },
-          ticks: {
-            font: { size: 11, family: 'Noto Sans KR, sans-serif' },
-            color: '#8A8FA3', maxRotation: 0, autoSkip: false
-          }
-        },
-        y: {
-          grid: { color: '#EFEFEF' },
-          border: { display: false },
-          ticks: {
-            font: { size: 10 },
-            color: '#8A8FA3',
-            callback: v => v + '백만'
-          }
-        }
+        x: { grid:{display:false}, border:{display:false},
+             ticks:{font:{size:11,family:'"Noto Sans KR",sans-serif'},color:'#8A8FA3',maxRotation:0,autoSkip:false} },
+        y: { grid:{color:'#EFEFEF'}, border:{display:false},
+             ticks:{font:{size:10},color:'#8A8FA3',callback:v=>v+'백만'} }
       },
       layout: { padding: { top: 28 } }
     },
-    plugins: [TOP_LABEL_PLUGIN]
+    plugins: [TOP_LABEL]
   });
 }
 
-/* ──────────────────────────────────────────────────────────────
-   렌더 — 채널 + KPI
-────────────────────────────────────────────────────────────── */
-function renderChannel(rows) {
-  const BADGE = { '오프라인':'b-off', '통합몰':'b-mall', '스마트스토어':'b-smt' };
-  let onOtb=0, onQty=0, onSales=0;
-  let grandOtb=0, grandQty=0, grandSales=0;
-  let html = '';
+/* ───────────────────────────────────────────────────────────────
+   렌더
+─────────────────────────────────────────────────────────────── */
+
+// ① 단일 CSV 파싱 — section 컬럼 유무 모두 처리
+//   [product 행] 테마|88코드|상품명|구분자|판매가|오프라인OTB|통합몰OTB|스마트스토어OTB|총OTB
+//   [sales 행]  날짜|채널|세부채널|제품코드|자재내역|매출수량|매출금액
+function splitRows(allRows) {
+  const hasSection = allRows.length > 0 && 'section' in allRows[0];
+  if (hasSection) {
+    return {
+      productRows: allRows.filter(r => (r.section || '').toLowerCase() === 'product'),
+      salesRows:   allRows.filter(r => (r.section || '').toLowerCase() === 'sales'),
+    };
+  }
+  // section 컬럼 없음 → 헤더로 자동 감지
+  const salesRows   = allRows.filter(r => r['날짜'] || r['세부채널'] || r['매출수량']);
+  const productRows = allRows.filter(r => r['테마']  || r['88코드']  || r['구분자']);
+  return { productRows, salesRows };
+}
+
+function processProducts(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const code = String(r['88코드'] || r['제품코드'] || '').trim();
+    if (!code) return;
+    const otbOff  = toI(r['오프라인 OTB'] || r['오프라인OTB'] || 0);
+    const otbMall = toI(r['통합몰 OTB']   || r['통합몰OTB']   || 0);
+    const otbSmt  = toI(r['스마트스토어 OTB'] || r['스마트스토어OTB'] || 0);
+    const otbAll  = toI(r['총  OTB'] || r['총 OTB'] || r['총OTB']) || (otbOff + otbMall + otbSmt);
+    map[code] = {
+      theme:   (r['테마']   || '').trim(),
+      name:    (r['상품명'] || '').trim(),
+      gubu:    (r['구분자'] || '').trim(),
+      otbOff, otbMall, otbSmt, otbAll,
+      salesOff: 0, salesMall: 0, salesSmt: 0,
+      qtyOff: 0, qtyMall: 0, qtySmt: 0,
+    };
+  });
+
+  const firstProd = Object.values(map)[0] || {};
+  const theme = firstProd.theme || '';
+  if (theme) {
+    document.getElementById('page-title').textContent = theme;
+    document.title = theme + ' — Business Management';
+    document.getElementById('footer-txt').textContent = 'Business Management · ' + theme;
+  }
+  return map;
+}
+
+// ② 매출데이터 집계
+//   매출데이터 컬럼: 날짜 | 채널 | 세부채널 | 제품코드 | 자재내역 | 매출수량 | 매출금액
+function processSales(rows, prodMap) {
+  const byDate = {};   // { 'MM/DD': { qty, sales } }
+  const byChSub = {    // 세부채널별
+    '오프라인':     { qty: 0, sales: 0 },
+    '통합몰':       { qty: 0, sales: 0 },
+    '스마트스토어': { qty: 0, sales: 0 },
+  };
 
   rows.forEach(r => {
-    const otb   = i(r.otb), qty = i(r.qty), sales = n(r.sales), st = n(r.sellthru);
-    const bc    = BADGE[r.channel] || '';
-    const isOn  = r.channel === '통합몰' || r.channel === '스마트스토어';
-    grandOtb += otb; grandQty += qty; grandSales += sales;
-    if (isOn) { onOtb += otb; onQty += qty; onSales += sales; }
+    const dateKey = parseDate(r['날짜'] || r['날짜 ']);
+    const ch      = (r['채널'] || '').trim();
+    const sub     = (r['세부채널'] || '').trim();
+    const code    = String(r['제품코드'] || '').trim();
+    const qty     = toI(r['매출수량'] || r['매출 수량']);
+    const sales   = toN(r['매출금액'] || r['매출 금액']);
+
+    // 날짜별
+    if (!byDate[dateKey]) byDate[dateKey] = { qty: 0, sales: 0 };
+    byDate[dateKey].qty   += qty;
+    byDate[dateKey].sales += sales;
+
+    // 채널별: 세부채널(통합몰/스마트스토어) 또는 채널(Offline)으로 판단
+    let subKey = sub;
+    if (!sub && ch.toLowerCase().includes('offline')) subKey = '오프라인';
+    if (byChSub[subKey]) {
+      byChSub[subKey].qty   += qty;
+      byChSub[subKey].sales += sales;
+    }
+
+    // 제품별 집계
+    if (prodMap[code]) {
+      if (subKey === '오프라인')     { prodMap[code].qtyOff  += qty; prodMap[code].salesOff  += sales; }
+      if (subKey === '통합몰')       { prodMap[code].qtyMall += qty; prodMap[code].salesMall += sales; }
+      if (subKey === '스마트스토어') { prodMap[code].qtySmt  += qty; prodMap[code].salesSmt  += sales; }
+    }
+  });
+
+  return { byDate, byChSub };
+}
+
+// ③ 채널별 요약 테이블 렌더
+function renderChannel(byChSub, prodMap) {
+  // OTB를 제품 시트에서 합산
+  let otbOff=0, otbMall=0, otbSmt=0;
+  Object.values(prodMap).forEach(p => {
+    otbOff  += p.otbOff;
+    otbMall += p.otbMall;
+    otbSmt  += p.otbSmt;
+  });
+  const otbAll = otbOff + otbMall + otbSmt;
+
+  const channels = [
+    { name: '오프라인',     cls: 'b-off',  otb: otbOff,  ...byChSub['오프라인'] },
+    { name: '통합몰',       cls: 'b-mall', otb: otbMall, ...byChSub['통합몰'] },
+    { name: '스마트스토어', cls: 'b-smt',  otb: otbSmt,  ...byChSub['스마트스토어'] },
+  ];
+
+  let grandQty=0, grandSales=0;
+  channels.forEach(c => { grandQty += (c.qty||0); grandSales += (c.sales||0); });
+
+  let html = '';
+  channels.forEach(c => {
+    const qty   = c.qty   || 0;
+    const sales = c.sales || 0;
+    const st    = c.otb > 0 ? qty / c.otb * 100 : 0;
     html += `<tr>
-      <td class="L"><span class="${bc}">${r.channel}</span></td>
-      <td>${fmtN(otb)}</td><td>${fmtN(qty)}</td>
-      <td>${fmt(sales)}</td><td>${fmtSt(st)}</td>
+      <td class="L"><span class="${c.cls}">${c.name}</span></td>
+      <td>${fmtN(c.otb)}</td><td>${fmtN(qty)}</td>
+      <td>${fmtSales(sales)}</td><td>${fmtSt(st)}</td>
     </tr>`;
   });
 
-  const onSt = onOtb > 0 ? onQty / onOtb * 100 : 0;
-  html += `<tr class="row-sub"><td>온라인 합계</td>
-    <td>${fmtN(onOtb)}</td><td>${fmtN(onQty)}</td>
-    <td>${fmt(onSales)}</td><td>${fmtSt(onSt)}</td>
+  const onlineQty   = (byChSub['통합몰'].qty||0) + (byChSub['스마트스토어'].qty||0);
+  const onlineSales = (byChSub['통합몰'].sales||0) + (byChSub['스마트스토어'].sales||0);
+  const onlineOtb   = otbMall + otbSmt;
+  const onlineSt    = onlineOtb > 0 ? onlineQty / onlineOtb * 100 : 0;
+  html += `<tr class="row-sub">
+    <td class="L">온라인 합계</td>
+    <td>${fmtN(onlineOtb)}</td><td>${fmtN(onlineQty)}</td>
+    <td>${fmtSales(onlineSales)}</td><td>${fmtSt(onlineSt)}</td>
   </tr>`;
   document.getElementById('ch-body').innerHTML = html;
 
-  const grandSt = grandOtb > 0 ? grandQty / grandOtb * 100 : 0;
-  document.getElementById('v-otb').textContent    = fmtN(grandOtb);
+  // KPI 업데이트
+  const grandSt = otbAll > 0 ? grandQty / otbAll * 100 : 0;
+  document.getElementById('v-otb').textContent    = fmtN(otbAll);
   document.getElementById('v-qty').textContent    = fmtN(grandQty);
-  document.getElementById('v-sales').textContent  = fmt(grandSales);
+  document.getElementById('v-sales').textContent  = fmtSales(grandSales);
   document.getElementById('v-sales-raw').textContent = '₩' + fmtN(Math.round(grandSales));
   document.getElementById('v-st').textContent     = fmtSt(grandSt);
-  document.getElementById('v-st-sub').textContent = `${fmtN(grandQty)} / ${fmtN(grandOtb)} EA`;
+  document.getElementById('v-st-sub').textContent = `${fmtN(grandQty)} / ${fmtN(otbAll)} EA`;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   렌더 — 날짜별 매출
-────────────────────────────────────────────────────────────── */
-function renderDaily(rows) {
+// ④ 날짜별 매출 렌더
+function renderDaily(byDate, prodMap) {
+  // 전체 OTB (날짜별 Sell-thru 기준)
+  const totalOtb = Object.values(prodMap).reduce((a, p) => a + p.otbAll, 0);
+
+  const sorted = Object.entries(byDate).sort((a, b) => a[0].localeCompare(b[0]));
   const labels=[], vals=[];
   let totQty=0, totSales=0, html='';
 
-  rows.forEach(r => {
-    const date  = r.date  || r['날짜']  || '';
-    const qty   = i(r.qty);
-    const sales = n(r.sales);
-    const st    = n(r.sellthru);
-    totQty += qty; totSales += sales;
-    labels.push(date); vals.push(sales / 1_000_000);
+  sorted.forEach(([date, d]) => {
+    const st = totalOtb > 0 ? d.qty / totalOtb * 100 : 0;
+    totQty   += d.qty;
+    totSales += d.sales;
+    labels.push(date);
+    vals.push(d.sales / 1_000_000);
     html += `<tr>
       <td class="L sm">${date}</td>
-      <td class="sm">${fmtN(qty)}</td>
-      <td class="sm">${fmt(sales)}</td>
+      <td class="sm">${fmtN(d.qty)}</td>
+      <td class="sm">${fmtSales(d.sales)}</td>
       <td class="sm">${fmtSt(st)}</td>
     </tr>`;
   });
 
-  if (rows.length > 1) {
+  if (sorted.length > 1) {
     html += `<tr class="row-total">
-      <td>합계</td><td>${fmtN(totQty)}</td><td>${fmt(totSales)}</td><td></td>
+      <td class="L">합계</td><td>${fmtN(totQty)}</td>
+      <td>${fmtSales(totSales)}</td><td></td>
     </tr>`;
   }
-
   document.getElementById('dl-body').innerHTML = html;
   drawChart(labels, vals);
 
+  // 인사이트
   const box = document.getElementById('dl-insight');
-  if (rows.length > 0 && totSales > 0) {
-    const peak      = [...rows].sort((a,b) => n(b.sales) - n(a.sales))[0];
-    const peakDate  = peak.date  || '';
-    const peakSales = n(peak.sales);
-    const pct       = (peakSales / totSales * 100).toFixed(0);
-    box.className   = 'insight on';
-    box.innerHTML   = `최고 매출일 <strong>${peakDate}</strong> — ${fmt(peakSales)} / 전체 대비 ${pct}% 집중`;
+  if (sorted.length > 0 && totSales > 0) {
+    const peak    = sorted.reduce((m, e) => e[1].sales > m[1].sales ? e : m);
+    const pct     = (peak[1].sales / totSales * 100).toFixed(0);
+    box.className = 'insight on';
+    box.innerHTML = `최고 매출일 <strong>${peak[0]}</strong> — ${fmtSales(peak[1].sales)} / 전체 대비 ${pct}% 집중`;
   } else {
-    box.className   = 'insight on';
+    box.className = 'insight on';
     box.textContent = '데이터 누적에 따라 자동 업데이트';
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   렌더 — 품목별 매출
-────────────────────────────────────────────────────────────── */
-function renderProducts(rows) {
+// ⑤ 품목별 매출 렌더 — 총OTB | 총매출수량 | 총매출금액 | Sell-thru | 오프라인수량 | 통합몰수량 | 스마트스토어수량
+function renderProducts(prodMap) {
   let html = '';
-  rows.forEach(r => {
-    const name = r.name || r['구분자']      || '';
-    const otb  = i(r.otb), qty = i(r.qty), sales = n(r.sales);
-    const off  = i(r.offline || r['오프라인']      || 0);
-    const mall = i(r.mall    || r['통합몰']         || 0);
-    const smt  = i(r.smart   || r['스마트스토어']   || 0);
-    const st   = n(r.sellthru);
-    const hi   = r.highlight === '1' || r.highlight === 'true';
-    html += `<tr class="${hi ? 'row-hi' : ''}">
-      <td class="L prod-nm">${name}</td>
-      <td class="sm">${fmtN(otb)}</td>
-      <td class="sm">${qty}</td>
-      <td class="sm">${fmt(sales)}</td>
-      <td class="sm">${off}</td>
-      <td class="sm">${mall}</td>
-      <td class="sm">${smt}</td>
-      <td class="sm ${hi ? 'hi-st' : ''}">${fmtSt(st)}</td>
+  Object.values(prodMap).forEach(p => {
+    const totalQty   = p.qtyOff + p.qtyMall + p.qtySmt;
+    const totalSales = p.salesOff + p.salesMall + p.salesSmt;
+    const st         = p.otbAll > 0 ? totalQty / p.otbAll * 100 : 0;
+    const hiSt       = st >= 5;
+    html += `<tr class="${hiSt ? 'row-hi' : ''}">
+      <td class="L prod-nm">${p.gubu || p.name}</td>
+      <td class="sm">${fmtN(p.otbAll)}</td>
+      <td class="sm">${fmtN(totalQty)}</td>
+      <td class="sm">${fmtSales(totalSales)}</td>
+      <td class="sm ${hiSt ? 'hi-st' : ''}">${fmtSt(st)}</td>
+      <td class="sm" style="border-left:1px solid #EFEFEF">${p.qtyOff  > 0 ? fmtN(p.qtyOff)  : '-'}</td>
+      <td class="sm">${p.qtyMall > 0 ? fmtN(p.qtyMall) : '-'}</td>
+      <td class="sm">${p.qtySmt  > 0 ? fmtN(p.qtySmt)  : '-'}</td>
     </tr>`;
   });
-  document.getElementById('pr-body').innerHTML = html;
+  document.getElementById('pr-body').innerHTML = html ||
+    '<tr><td colspan="8" style="text-align:center;font-size:11px;color:#8A8FA3;padding:16px">제품 데이터 없음</td></tr>';
 }
 
-/* ──────────────────────────────────────────────────────────────
-   에러 표시
-────────────────────────────────────────────────────────────── */
-function showErr() {
-  const msg = `<tr><td colspan="8" class="err">데이터를 불러올 수 없습니다 — CSV 주소와 구글 시트 공유 설정(뷰어 공개)을 확인해주세요</td></tr>`;
+// 에러 표시
+function showErr(msg) {
+  setStatus('fail', msg || '데이터 로드 실패 — CSV 주소 및 공유 설정 확인 필요');
   ['ch-body','dl-body','pr-body'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = msg;
+    if (el) el.innerHTML = `<tr><td colspan="8" class="err">${msg || 'CSV 주소 또는 구글 시트 공유 설정을 확인해주세요'}</td></tr>`;
   });
-  document.getElementById('dl-insight').textContent = '';
 }
 
-/* ──────────────────────────────────────────────────────────────
-   메인 초기화
-────────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────────────────
+   메인 진입
+─────────────────────────────────────────────────────────────── */
 async function init() {
-  if (!csvUrl || csvUrl === '') {
-    showErr();
-    ['v-otb','v-qty','v-sales','v-st'].forEach(id => {
-      document.getElementById(id).innerHTML = '<span style="font-size:13px;color:#8A8FA3">CSV 주소 미입력</span>';
-    });
-    return;
-  }
+  setStatus('spin', '데이터 불러오는 중');
 
   try {
-    const res  = await fetch(csvUrl);
+    const res = await fetch(csvUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    const rows = parseCSV(text);
+    const allRows = parseCSV(text);
 
-    const chRows  = rows.filter(r => r.section === 'channel');
-    const dlRows  = rows.filter(r => r.section === 'daily');
-    const prRows  = rows.filter(r => r.section === 'product');
+    const { productRows, salesRows } = splitRows(allRows);
 
-    renderChannel(chRows);
-    renderDaily(dlRows);
-    renderProducts(prRows);
+    let prodMap = {};
+    if (productRows.length > 0) {
+      prodMap = processProducts(productRows);
+    } else {
+      document.getElementById('page-title').textContent = '신상품 매출 리포트';
+    }
+
+    const { byDate, byChSub } = processSales(salesRows, prodMap);
+
+    renderChannel(byChSub, prodMap);
+    renderDaily(byDate, prodMap);
+    renderProducts(prodMap);
+
+    setStatus('ok', `마지막 업데이트: ${new Date().toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}`);
 
   } catch (err) {
-    console.error('[Dashboard] 로드 실패:', err);
-    showErr();
+    console.error('[Dashboard] 오류:', err);
+    showErr('데이터 로드 실패 — ' + err.message);
   }
 }
 
