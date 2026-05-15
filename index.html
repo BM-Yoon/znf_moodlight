@@ -208,16 +208,15 @@ tr:last-child td{border-bottom:none}
 /* ════════════════════════════════════════════════════════════════
    ★  URL 설정
    ────────────────────────────────────────────────────────────────
-   CSV_PROD : 출시상품데이터 탭 (제공해주신 새 주소로 수정됨)
-   CSV_SALE : 매출데이터 탭 (동일한 파일의 다른 탭일 경우 gid 확인 필요)
-════════════════════════════════════════════════════════════════ */
-// 제공해주신 새로운 구글 시트 주소입니다.
-const CSV_PROD = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfs-nhUbpSBqH9RoQxlI3siDEibhqoXQJx8Y6BnLdp1q3gyFWsyY-pSTsNKHGA4Qik-6UA5KYQ3rAq/pub?output=csv';
+   CSV_PROD : 출시상품데이터 탭 (현재 입력된 주소)
+   CSV_SALE : 매출데이터 탭   (없으면 '' 로 두면 됩니다)
 
-// 만약 매출 데이터가 다른 탭에 있다면 해당 탭의 '웹에 게시' CSV 주소를 여기에 넣으세요.
-// 현재는 데이터가 한 곳에 있다고 가정하여 동일하게 설정하거나 비워둘 수 있습니다.
-const CSV_SALE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfs-nhUbpSBqH9RoQxlI3siDEibhqoXQJx8Y6BnLdp1q3gyFWsyY-pSTsNKHGA4Qik-6UA5KYQ3rAq/pub?output=csv';
-  
+   URL 형식: .../pub?output=csv&gid=탭번호
+   gid 확인: 구글 시트 탭 클릭 → 주소창 끝 #gid=숫자
+════════════════════════════════════════════════════════════════ */
+const CSV_PROD = 'https://docs.google.com/spreadsheets/d/1EWljDC_UfLoDmboTwyD3_gSWr-Fob4bg/export?format=csv&gid=1765045740';
+const CSV_SALE = 'https://docs.google.com/spreadsheets/d/1EWljDC_UfLoDmboTwyD3_gSWr-Fob4bg/export?format=csv&gid=230037198';  // ← 매출데이터 탭 pub CSV URL (없으면 빈 문자열)
+
 /* ════════════════════════════════════════════════════════════════
    헤더 키워드 매핑 (시트 컬럼명이 달라도 자동 감지)
 ════════════════════════════════════════════════════════════════ */
