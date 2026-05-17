@@ -8,7 +8,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR','Apple SD Gothic Neo',-apple-system,sans-serif;background:#F9F8F6;color:#1E2029;padding:36px 24px;min-height:100vh;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1000px;margin:0 auto}
+.wrap{max-width:1100px;margin:0 auto}
 .page-hd{margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #EFEFEF}
 .page-title{font-size:20px;font-weight:700;color:#1E2029;margin-bottom:4px;min-height:28px}
 .page-team{font-size:11px;color:#8A8FA3}
@@ -46,18 +46,20 @@ tr:last-child td{border-bottom:none}
 .row-total td.L{text-align:left}
 .row-hi{background:#FEF7F7}
 .hi{color:#9B2236;font-weight:700}
-.nm{font-size:11px;color:#8A8FA3;text-align:left;max-width:200px;white-space:normal;word-break:keep-all;line-height:1.5}
+.nm{font-size:11px;color:#8A8FA3;text-align:left;max-width:180px;white-space:normal;word-break:keep-all;line-height:1.5}
 .tbl-scroll{overflow-x:auto}
-.tbl-scroll table{min-width:780px}
+.tbl-scroll table{min-width:900px}
 .bl{border-left:1px solid #EFEFEF !important}
 .muted{color:#D1D5DB}
 .b-off{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#FAECE7;color:#993C1D}
 .b-mall{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#E1F5EE;color:#0F6E56}
 .b-smt{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#E6F1FB;color:#185FA5}
+.b-kakao{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#FFF9E6;color:#7A5F00}
+.b-29cm{display:inline-block;font-size:10px;font-weight:600;padding:2px 10px;border-radius:20px;background:#F4F4F4;color:#222222}
 .daily-wrap{display:flex;gap:28px;align-items:flex-start}
-.daily-chart-col{flex:1.6}
+.daily-chart-col{flex:1.4}
 .daily-tbl-col{flex:1;padding-top:4px}
-@media(max-width:680px){.daily-wrap{flex-direction:column}.daily-chart-col,.daily-tbl-col{flex:none;width:100%}}
+@media(max-width:768px){.daily-wrap{flex-direction:column}.daily-chart-col,.daily-tbl-col{flex:none;width:100%}}
 .chart-box{position:relative;width:100%;height:220px}
 .sk{display:inline-block;border-radius:3px;background:linear-gradient(90deg,#EFEFEF 25%,#F9F8F6 50%,#EFEFEF 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -145,18 +147,24 @@ tr:last-child td{border-bottom:none}
       <table>
         <thead>
           <tr>
-            <th class="L" rowspan="2" style="min-width:200px;vertical-align:bottom">구분자</th>
+            <th class="L" rowspan="2" style="min-width:180px;vertical-align:bottom">구분자</th>
             <th rowspan="2" style="vertical-align:bottom">총 OTB</th>
             <th rowspan="2" style="vertical-align:bottom">총 매출수량</th>
             <th rowspan="2" style="vertical-align:bottom">총 매출금액</th>
             <th rowspan="2" style="vertical-align:bottom">Sell-thru</th>
-            <th colspan="3" class="C bl" style="color:#9B2236;font-weight:600;padding-bottom:4px">채널별 매출 수량 (EA)</th>
+            <th colspan="5" class="C bl" style="color:#9B2236;font-weight:600;padding-bottom:4px">채널별 매출 수량 (EA)</th>
           </tr>
-          <tr><th class="bl">오프라인</th><th>통합몰</th><th>스마트스토어</th></tr>
+          <tr>
+            <th class="bl">오프라인</th>
+            <th>통합몰</th>
+            <th>스마트스토어</th>
+            <th>카카오선물하기</th>
+            <th>29CM</th>
+          </tr>
         </thead>
         <tbody id="pr-body">
-          <tr><td colspan="8"><span class="sk" style="width:100%;height:26px;display:block"></span></td></tr>
-          <tr><td colspan="8"><span class="sk" style="width:90%;height:26px;display:block;margin-top:3px"></span></td></tr>
+          <tr><td colspan="10"><span class="sk" style="width:100%;height:26px;display:block"></span></td></tr>
+          <tr><td colspan="10"><span class="sk" style="width:90%;height:26px;display:block;margin-top:3px"></span></td></tr>
         </tbody>
       </table>
     </div>
@@ -229,10 +237,22 @@ function toMMDD(raw) {
   return s.slice(0,5)||null;
 }
 
+// 💡 회사 전용 채널/세부채널 매핑 규칙 자동화 로직
 function toBucket(ch) {
-  const s = String(ch||'').toLowerCase();
-  if (s.includes('통합몰'))                        return '통합몰';
-  if (s.includes('스마트')||s.includes('smart'))   return '스마트스토어';
+  const s = String(ch||'').toLowerCase().replace(/\s+/g, '');
+  
+  // 1. 온라인 세부 채널 판정
+  if (s.includes('스마트스토어') || s.includes('네이버') || s.includes('스스')) return '스마트스토어';
+  if (s.includes('카카오선물하기') || s.includes('카카오') || s.includes('선물하기')) return '카카오선물하기';
+  if (s.includes('29cm') || s.includes('이십구센치')) return '29CM';
+  if (s.includes('통합몰') || s.includes('자사몰') || s.includes('쿠팡')) return '통합몰';
+  
+  // 2. 오프라인 세부 채널 판정 (명동, 홍대, 성수, 분당은 모두 '오프라인'으로 통합 합산)
+  if (s.includes('명동') || s.includes('홍대') || s.includes('성수') || s.includes('분당') || s.includes('라인프렌즈') || s.includes('스퀘어')) {
+    return '오프라인';
+  }
+  
+  // 기본 예외처리 방어 코드
   return '오프라인';
 }
 
@@ -298,25 +318,31 @@ function renderKPI(totOtb, totQty, totSales) {
   document.getElementById('v-st-sub').textContent    = `${fmtN(totQty)} / ${fmtN(totOtb)} EA`;
 }
 
+// 💡 5대 채널 확장에 따른 대시보드 테이블 렌더링 로직 수정
 function renderChannel(byCh, otbMap) {
-  const ORDER=['오프라인','통합몰','스마트스토어'];
-  const BADGE={'오프라인':'b-off','통합몰':'b-mall','스마트스토어':'b-smt'};
-  let html='';
-  ORDER.forEach(name=>{
-    const d=byCh[name]||{qty:0,sales:0};
-    const otb=otbMap[name]||0;
-    const st=otb>0?d.qty/otb*100:0;
-    html+=`<tr><td class="L"><span class="${BADGE[name]}">${name}</span></td><td>${otb>0?fmtN(otb):'—'}</td><td>${d.qty>0?fmtN(d.qty):'—'}</td><td>${fmtM(d.sales)}</td><td>${otb>0?fmtSt(st):'—'}</td></tr>`;
+  const ORDER = ['오프라인', '통합몰', '스마트스토어', '카카오선물하기', '29CM'];
+  const BADGE = {'오프라인':'b-off', '통합몰':'b-mall', '스마트스토어':'b-smt', '카카오선물하기':'b-kakao', '29CM':'b-29cm'};
+  let html = '';
+  
+  ORDER.forEach(name => {
+    const d = byCh[name] || {qty:0, sales:0};
+    const otb = otbMap[name] || 0;
+    const st = otb > 0 ? d.qty / otb * 100 : 0;
+    html += `<tr><td class="L"><span class="${BADGE[name]}">${name}</span></td><td>${otb>0?fmtN(otb):'—'}</td><td>${d.qty>0?fmtN(d.qty):'—'}</td><td>${fmtM(d.sales)}</td><td>${otb>0?fmtSt(st):'—'}</td></tr>`;
   });
-  const onQ=(byCh['통합몰']?.qty||0)+(byCh['스마트스토어']?.qty||0);
-  const onS=(byCh['통합몰']?.sales||0)+(byCh['스마트스토어']?.sales||0);
-  const onO=(otbMap['통합몰']||0)+(otbMap['스마트스토어']||0);
-  html+=`<tr class="row-sub"><td class="L">온라인 합계</td><td>${onO>0?fmtN(onO):'—'}</td><td>${onQ>0?fmtN(onQ):'—'}</td><td>${fmtM(onS)}</td><td>${onO>0?fmtSt(onQ/onO*100):'—'}</td></tr>`;
-  const tO=Object.values(otbMap).reduce((a,v)=>a+v,0);
-  const tQ=Object.values(byCh).reduce((a,v)=>a+(v.qty||0),0);
-  const tS=Object.values(byCh).reduce((a,v)=>a+(v.sales||0),0);
-  html+=`<tr class="row-total"><td class="L">전체 합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td></tr>`;
-  document.getElementById('ch-body').innerHTML=html;
+  
+  const onQ = (byCh['통합몰']?.qty||0) + (byCh['스마트스토어']?.qty||0) + (byCh['카카오선물하기']?.qty||0) + (byCh['29CM']?.qty||0);
+  const onS = (byCh['통합몰']?.sales||0) + (byCh['스마트스토어']?.sales||0) + (byCh['카카오선물하기']?.sales||0) + (byCh['29CM']?.sales||0);
+  const onO = (otbMap['통합몰']||0) + (otbMap['스마트스토어']||0) + (otbMap['카카오선물하기']||0) + (otbMap['29CM']||0);
+  
+  html += `<tr class="row-sub"><td class="L">온라인 합계</td><td>${onO>0?fmtN(onO):'—'}</td><td>${onQ>0?fmtN(onQ):'—'}</td><td>${fmtM(onS)}</td><td>${onO>0?fmtSt(onQ/onO*100):'—'}</td></tr>`;
+  
+  const tO = Object.values(otbMap).reduce((a,v)=>a+v,0);
+  const tQ = Object.values(byCh).reduce((a,v)=>a+(v.qty||0),0);
+  const tS = Object.values(byCh).reduce((a,v)=>a+(v.sales||0),0);
+  
+  html += `<tr class="row-total"><td class="L">전체 합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td></tr>`;
+  document.getElementById('ch-body').innerHTML = html;
 }
 
 function renderDaily(byDate, totalOtb) {
@@ -337,24 +363,37 @@ function renderDaily(byDate, totalOtb) {
   drawChart(labels,salesArr);
 }
 
+// 💡 5대 채널 확장에 따른 하단 품목별 테이블 렌더링 로직 수정
 function renderProducts(gubuMap) {
   let html='',tO=0,tQ=0,tS=0;
   Object.values(gubuMap).sort((a,b)=>b.sales-a.sales).forEach(g=>{
-    const qty=g.qtyOff+g.qtyMall+g.qtySmt;
-    const sales=g.salesOff+g.salesMall+g.salesSmt;
-    const st=g.otb>0?qty/g.otb*100:0;
-    const hi=st>=30;
-    tO+=g.otb; tQ+=qty; tS+=sales;
-    html+=`<tr class="${hi?'row-hi':''}"><td class="nm">${g.name}</td><td>${fmtN(g.otb)}</td><td>${fmtN(qty)}</td><td>${fmtM(sales)}</td><td class="${hi?'hi':''}">${fmtSt(st)}</td><td class="bl">${g.qtyOff>0?fmtN(g.qtyOff):dash}</td><td>${g.qtyMall>0?fmtN(g.qtyMall):dash}</td><td>${g.qtySmt>0?fmtN(g.qtySmt):dash}</td></tr>`;
+    const qty = g.qtyOff + g.qtyMall + g.qtySmt + g.qtyKakao + g.qty29;
+    const sales = g.salesOff + g.salesMall + g.salesSmt + g.salesKakao + g.sales29;
+    const st = g.otb > 0 ? qty / g.otb * 100 : 0;
+    const hi = st >= 30;
+    tO += g.otb; tQ += qty; tS += sales;
+    
+    html += `<tr class="${hi?'row-hi':''}">
+      <td class="nm">${g.name}</td>
+      <td>${fmtN(g.otb)}</td>
+      <td>${fmtN(qty)}</td>
+      <td>${fmtM(sales)}</td>
+      <td class="${hi?'hi':''}">${fmtSt(st)}</td>
+      <td class="bl">${g.qtyOff>0?fmtN(g.qtyOff):dash}</td>
+      <td>${g.qtyMall>0?fmtN(g.qtyMall):dash}</td>
+      <td>${g.qtySmt>0?fmtN(g.qtySmt):dash}</td>
+      <td>${g.qtyKakao>0?fmtN(g.qtyKakao):dash}</td>
+      <td>${g.qty29>0?fmtN(g.qty29):dash}</td>
+    </tr>`;
   });
-  html+=`<tr class="row-total"><td class="L">합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td><td class="bl"></td><td></td><td></td></tr>`;
-  document.getElementById('pr-body').innerHTML=html||'<tr><td colspan="8" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">제품 데이터 없음</td></tr>';
+  html += `<tr class="row-total"><td class="L">합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td><td class="bl"></td><td></td><td></td><td></td><td></td></tr>`;
+  document.getElementById('pr-body').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">제품 데이터 없음</td></tr>';
 }
 
 function showErr(msg, detail) {
   setStatus('fail','데이터 로드 실패');
   document.getElementById('page-title').textContent='신상품 매출 리포트';
-  const html=`<tr><td colspan="8"><div class="err-box"><b>${msg}</b>${detail?`<pre>${detail}</pre>`:''}</div></td></tr>`;
+  const html=`<tr><td colspan="10"><div class="err-box"><b>${msg}</b>${detail?`<pre>${detail}</pre>`:''}</div></td></tr>`;
   ['ch-body','dl-body','pr-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
@@ -390,7 +429,13 @@ async function init() {
     const otbRaw=toI(g(r,pH,'otb_all'));
     const otbAll=otbRaw>0?otbRaw:(otbOff+otbMall+otbSmt);
     codeMap[code]={gubu,otbOff,otbMall,otbSmt};
-    if(!gubuMap[gubu]) gubuMap[gubu]={name:gubu,otb:0,otbOff:0,otbMall:0,otbSmt:0,qtyOff:0,qtyMall:0,qtySmt:0,salesOff:0,salesMall:0,salesSmt:0,sales:0};
+    
+    // 💡 새로운 5대 채널 구조로 데이터 매핑 객체 초기화 구현
+    if(!gubuMap[gubu]) gubuMap[gubu]={
+      name:gubu, otb:0, otbOff:0, otbMall:0, otbSmt:0,
+      qtyOff:0, qtyMall:0, qtySmt:0, qtyKakao:0, qty29:0,
+      salesOff:0, salesMall:0, salesSmt:0, salesKakao:0, sales29:0, sales:0
+    };
     gubuMap[gubu].otb+=otbAll; gubuMap[gubu].otbOff+=otbOff; gubuMap[gubu].otbMall+=otbMall; gubuMap[gubu].otbSmt+=otbSmt;
   });
 
@@ -400,7 +445,15 @@ async function init() {
   document.getElementById('footer-txt').textContent='Business Management · '+titleText;
 
   const byDate={};
-  const byCh={'오프라인':{qty:0,sales:0},'통합몰':{qty:0,sales:0},'스마트스토어':{qty:0,sales:0}};
+  
+  // 💡 데이터 저장소 구조를 5대 채널 구조로 리팩토링
+  const byCh={
+    '오프라인':{qty:0,sales:0},
+    '통합몰':{qty:0,sales:0},
+    '스마트스토어':{qty:0,sales:0},
+    '카카오선물하기':{qty:0,sales:0},
+    '29CM':{qty:0,sales:0}
+  };
 
   saleRows.forEach(r=>{
     const date=toMMDD(g(r,sH,'date')); if(!date) return;
@@ -410,13 +463,17 @@ async function init() {
     const sales=toN(g(r,sH,'sales'));
     const gubu=g(r,sH,'sale_gubu')||codeMap[code]?.gubu||'';
     const bkt=toBucket(ch);
+    
     if(!byDate[date]) byDate[date]={qty:0,sales:0};
     byDate[date].qty+=qty; byDate[date].sales+=sales;
-    byCh[bkt].qty+=qty; byCh[bkt].sales+=sales;
+    if(byCh[bkt]) { byCh[bkt].qty+=qty; byCh[bkt].sales+=sales; }
+    
     if(gubu&&gubuMap[gubu]){
-      if(bkt==='오프라인')    {gubuMap[gubu].qtyOff+=qty; gubuMap[gubu].salesOff+=sales;}
-      else if(bkt==='통합몰') {gubuMap[gubu].qtyMall+=qty;gubuMap[gubu].salesMall+=sales;}
-      else                    {gubuMap[gubu].qtySmt+=qty; gubuMap[gubu].salesSmt+=sales;}
+      if(bkt==='오프라인')          {gubuMap[gubu].qtyOff+=qty; gubuMap[gubu].salesOff+=sales;}
+      else if(bkt==='통합몰')       {gubuMap[gubu].qtyMall+=qty;gubuMap[gubu].salesMall+=sales;}
+      else if(bkt==='스마트스토어')  {gubuMap[gubu].qtySmt+=qty; gubuMap[gubu].salesSmt+=sales;}
+      else if(bkt==='카카오선물하기'){gubuMap[gubu].qtyKakao+=qty;gubuMap[gubu].salesKakao+=sales;}
+      else if(bkt==='29CM')         {gubuMap[gubu].qty29+=qty;  gubuMap[gubu].sales29+=sales;}
       gubuMap[gubu].sales+=sales;
     }
   });
@@ -425,6 +482,8 @@ async function init() {
     '오프라인':     prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_off')),0),
     '통합몰':       prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_mall')),0),
     '스마트스토어': prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_smt')),0),
+    '카카오선물하기': 0, // OTB가 기획 단계에서 분리되지 않은 경우 방어용 0 세팅
+    '29CM':         0
   };
   const totalOtb  =Object.values(otbMap).reduce((a,v)=>a+v,0);
   const totalQty  =Object.values(byDate).reduce((a,d)=>a+d.qty,0);
