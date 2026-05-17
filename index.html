@@ -190,7 +190,7 @@ const HDR = {
   otb_smt:  ['스스 otb','스마트스토어 otb','스마트스토어otb','smt_otb','스마트 otb'],
   otb_all:  ['총 otb','총  otb','total otb','total_otb','총otb'],
   date:     ['날짜','date','일자'],
-  channel:  ['판매채널','채널','channel','세부채널'],
+  channel:  ['세부채널','판매채널','채널','channel'],
   sale_code:['제품코드','88코드','코드','code','product_code'],
   qty:      ['매출수량','수량','qty','quantity','판매수량'],
   sales:    ['매출금액','금액','sales','amount','판매금액'],
@@ -239,15 +239,27 @@ function toMMDD(raw) {
 }
 
 function toBucket(ch) {
-  const s = String(ch||'').toLowerCase().replace(/\s+/g, '');
-  if (s.includes('스마트스토어') || s.includes('네이버') || s.includes('스스')) return '스마트스토어';
-  if (s.includes('카카오선물하기') || s.includes('카카오') || s.includes('선물하기')) return '카카오선물하기';
-  if (s.includes('29cm') || s.includes('이십구센치')) return '29CM';
-  if (s.includes('통합몰') || s.includes('자사몰') || s.includes('쿠팡')) return '통합몰';
-  if (s.includes('명동') || s.includes('홍대') || s.includes('성수') || s.includes('분당') || s.includes('라인프렌즈') || s.includes('스퀘어')) {
-    return '오프라인';
-  }
-  // ⚠️ 알 수 없는 채널명은 오프라인으로 분류됩니다 (기본값). 매핑 필요 시 위 조건에 추가하세요
+  // ──────────────────────────────────────────────────────────────────
+  // 회사 채널 분류 규칙 (세부채널 열 텍스트 기준)
+  // 온라인 4채널: 키워드가 포함되면 해당 채널로 독립 분류
+  // 오프라인: 매장 키워드가 포함되면 '오프라인' 단일 덩어리로 합산
+  // 미매칭: 기본값 '오프라인'으로 처리
+  // ──────────────────────────────────────────────────────────────────
+  const s = String(ch || '').replace(/\s+/g, '');        // 공백 제거 (대소문자 유지)
+  const sl = s.toLowerCase();                              // 영문 대소문자 무시용
+
+  // ① 온라인 계열 — 키워드 포함 시 독립 채널 분류 (우선순위 순)
+  if (s.includes('카카오선물하기'))  return '카카오선물하기';
+  if (s.includes('스마트스토어'))    return '스마트스토어';
+  if (s.includes('통합몰'))          return '통합몰';
+  if (sl.includes('29cm') || s.includes('이십구센치')) return '29CM';
+
+  // ② 오프라인 계열 — 매장 키워드 포함 시 '오프라인' 단일 합산
+  if (s.includes('명동점') || s.includes('홍대점') ||
+      s.includes('성수점') || s.includes('분당스퀘어점')) return '오프라인';
+
+  // ③ 기본값: 위 키워드에 해당하지 않으면 오프라인으로 처리
+  //    ⚠️ 새 채널/매장 추가 시 위 조건에 키워드를 반드시 추가하세요
   return '오프라인';
 }
 
