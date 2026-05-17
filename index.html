@@ -176,349 +176,497 @@ tr:last-child td{border-bottom:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ⚠️ 여기에 구글 시트 웹에 게시(CSV) 주소 한 쌍을 각각 넣어주세요!
+
+// ── CSV URL ───────────────────────────────────────────────────────────────
 const CSV_PROD = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRY1kMxejp5R2-9gsTz_MP7uO-a-6Ep3BEMZpdpSX_KjB0ca6bxXV4nRu1ZeWVi3A/pub?gid=804611156&single=true&output=csv';
 const CSV_SALE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRY1kMxejp5R2-9gsTz_MP7uO-a-6Ep3BEMZpdpSX_KjB0ca6bxXV4nRu1ZeWVi3A/pub?gid=2099164386&single=true&output=csv';
 
-const HDR = {
+// ── 채널 상수 ─────────────────────────────────────────────────────────────
+var ALL_CH   = ['오프라인','통합몰','스마트스토어','카카오선물하기','29CM'];
+var CH_BADGE = {'오프라인':'b-off','통합몰':'b-mall','스마트스토어':'b-smt',
+                '카카오선물하기':'b-kakao','29CM':'b-29cm'};
+var CH_QTY   = {'오프라인':'qtyOff','통합몰':'qtyMall','스마트스토어':'qtySmt',
+                '카카오선물하기':'qtyKakao','29CM':'qty29'};
+var CH_SALES = {'오프라인':'salesOff','통합몰':'salesMall','스마트스토어':'salesSmt',
+                '카카오선물하기':'salesKakao','29CM':'sales29'};
+
+// ── 헤더 후보 사전 ────────────────────────────────────────────────────────
+var HDR = {
   theme:    ['테마','theme'],
-  code:     ['88코드','코드','code','product_code','제품코드','barcode'],
-  name:     ['상품명','제품명','name'],
-  gubu:     ['구분자','gubu','category','구분'],
-  otb_off:  ['오프라인 otb','오프라인otb','offline otb','offline_otb'],
-  otb_mall: ['통합몰 otb','통합몰otb','mall otb','mall_otb'],
-  otb_smt:  ['스스 otb','스마트스토어 otb','스마트스토어otb','smt_otb','스마트 otb'],
-  otb_all:  ['총 otb','총  otb','total otb','total_otb','총otb'],
-  date:     ['날짜','date','일자'],
-  channel:  ['세부채널','판매채널','채널','channel'],
-  sale_code:['제품코드','88코드','코드','code','product_code'],
-  qty:      ['매출수량','수량','qty','quantity','판매수량'],
-  sales:    ['매출금액','금액','sales','amount','판매금액'],
-  sale_gubu:['구분자','gubu','category'],
+  code:     ['88코드','코드','code','product_code','제품코드','barcode','sku'],
+  name:     ['상품명','제품명','name','품명'],
+  gubu:     ['구분자','gubu','category','구분','카테고리'],
+  otb_off:  ['오프라인 otb','오프라인otb','offline otb','offline_otb','오프라인 계획','오프라인계획'],
+  otb_mall: ['통합몰 otb','통합몰otb','mall otb','mall_otb','통합몰 계획','통합몰계획','자사몰 otb','자사몰otb'],
+  otb_smt:  ['스마트스토어 otb','스마트스토어otb','스스 otb','스스otb','smt_otb',
+             '스마트 otb','스마트스토어 계획','네이버 otb'],
+  otb_all:  ['총 otb','총  otb','total otb','total_otb','총otb','전체 otb'],
+  date:     ['날짜','date','일자','판매일','판매일자'],
+  channel:  ['세부채널','판매채널','채널','channel','세부 채널'],
+  sale_code:['제품코드','88코드','코드','code','product_code','sku','barcode'],
+  qty:      ['매출수량','수량','qty','quantity','판매수량','판매 수량'],
+  sales:    ['매출금액','금액','sales','amount','판매금액','판매 금액'],
+  sale_gubu:['구분자','구분자(카테고리)','gubu','category','구분','카테고리'],
 };
 
+// ── 문자열 정규화 (Unicode NFC + 공백 제거) ───────────────────────────────
+function norm(s) {
+  return String(s||'').normalize('NFC').replace(/\s+/g,'').toLowerCase();
+}
+
+// ── 헤더 감지 (exact → fuzzy 두 단계) ────────────────────────────────────
 function detectHeaders(rows) {
-  if (!rows.length) return {};
-  const actual = Object.keys(rows[0]).map(h => h.trim());
-  const res = {};
-  for (const [key, cands] of Object.entries(HDR)) {
-    for (const c of cands) {
-      const match = actual.find(h => h.toLowerCase().replace(/\s+/g,'') === c.toLowerCase().replace(/\s+/g,''));
+  if (!rows || !rows.length) return {};
+  var actual = Object.keys(rows[0]).map(function(h){ return String(h).trim(); });
+  var res = {};
+
+  // 1단계: 정규화 exact match
+  Object.keys(HDR).forEach(function(key) {
+    var cands = HDR[key];
+    for (var i = 0; i < cands.length; i++) {
+      var nc = norm(cands[i]);
+      var match = actual.find(function(h){ return norm(h) === nc; });
       if (match) { res[key] = match; break; }
     }
+  });
+
+  // ★ Bug2: 2단계 — OTB 컬럼 퍼지 탐색 (exact 실패 시)
+  // 채널 키워드 + OTB/계획/수량 키워드가 동시에 포함된 컬럼을 substring으로 탐색
+  function fuzzyOtb(channelKws) {
+    return actual.find(function(h) {
+      var hn = norm(h);
+      var hasOtb = hn.indexOf('otb') !== -1 || hn.indexOf('oob') !== -1 ||
+                   hn.indexOf('계획') !== -1 || hn.indexOf('수량') !== -1;
+      var hasCh  = channelKws.some(function(kw){ return hn.indexOf(norm(kw)) !== -1; });
+      return hasOtb && hasCh;
+    });
   }
+  if (!res.otb_off)  res.otb_off  = fuzzyOtb(['오프라인','offline','오프']);
+  if (!res.otb_mall) res.otb_mall = fuzzyOtb(['통합몰','자사몰','mall']);
+  if (!res.otb_smt)  res.otb_smt  = fuzzyOtb(['스마트스토어','스마트','스스','네이버','smt']);
+  if (!res.otb_all)  res.otb_all  = fuzzyOtb(['총','전체','total']);
+
   return res;
 }
 
-function g(row, hMap, key, fb='') {
-  const col = hMap[key];
-  if (!col || row[col] === undefined) return fb;
-  return String(row[col]).trim();
+// ── 셀 값 안전 추출 (NFC 정규화 포함) ───────────────────────────────────
+function g(row, hMap, key, fb) {
+  fb = (fb === undefined) ? '' : fb;
+  try {
+    var col = hMap[key];
+    if (!col) return fb;
+    var v = row[col];
+    return (v === undefined || v === null) ? fb : String(v).normalize('NFC').trim();
+  } catch(e) { return fb; }
 }
 
-const toN  = v => parseFloat(String(v).replace(/,/g,'')) || 0;
-const toI  = v => Math.round(toN(v));
-const fmtN = v => Number(v).toLocaleString('ko-KR');
-const fmtSt = v => (v > 0 ? v.toFixed(1) : '0.0') + '%';
-const fmtM  = w => (!w||w===0) ? '—' : (w/1_000_000).toFixed(1)+'백만';
-const fmtMR = w => '₩'+fmtN(Math.round(w));
-const dash  = '<span class="muted">—</span>';
+// ── 숫자 유틸 ─────────────────────────────────────────────────────────────
+var toN   = function(v){ try{ return parseFloat(String(v).replace(/,/g,''))||0; }catch(e){ return 0; } };
+var toI   = function(v){ return Math.round(toN(v)); };
+var fmtN  = function(v){ try{ return Number(v).toLocaleString('ko-KR'); }catch(e){ return '0'; } };
+var fmtSt = function(v){ return (v>0?Number(v).toFixed(1):'0.0')+'%'; };
+var fmtM  = function(w){ return (!w||w===0)?'—':(w/1000000).toFixed(1)+'백만'; };
+var fmtMR = function(w){ return '\u20a9'+fmtN(Math.round(w)); };
+var dash  = '<span class="muted">—</span>';
 
+// ── 날짜 파싱 ─────────────────────────────────────────────────────────────
 function toMMDD(raw) {
   if (!raw) return null;
-  const s = String(raw).trim();
-  if (/^\d{4,5}$/.test(s)) {
-    const d = new Date(1899,11,30); d.setDate(d.getDate()+parseInt(s));
-    return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  var s = String(raw).trim();
+  if (/^\d{5}$/.test(s)) {
+    var n = parseInt(s,10);
+    if (n > 30000) {
+      var d = new Date(1899,11,30);
+      d.setDate(d.getDate()+n);
+      return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+    }
   }
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return `${iso[2]}/${iso[3]}`;
-  const mdy = s.match(/^(\d{1,2})\/(\d{1,2})/);
-  if (mdy) return `${String(mdy[1]).padStart(2,'0')}/${String(mdy[2]).padStart(2,'0')}`;
-  return s.slice(0,5)||null;
+  var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[2]+'/'+iso[3];
+  var mdy = s.match(/^(\d{1,2})\/(\d{1,2})/);
+  if (mdy) return String(mdy[1]).padStart(2,'0')+'/'+String(mdy[2]).padStart(2,'0');
+  var dot = s.match(/^\d{4}\.(\d{1,2})\.(\d{1,2})/);
+  if (dot) return String(dot[1]).padStart(2,'0')+'/'+String(dot[2]).padStart(2,'0');
+  return null;
 }
 
+// ── 채널 판정 ─────────────────────────────────────────────────────────────
 function toBucket(ch) {
-  // ──────────────────────────────────────────────────────────────────
-  // 회사 채널 분류 규칙 (세부채널 열 텍스트 기준)
-  // 온라인 4채널: 키워드가 포함되면 해당 채널로 독립 분류
-  // 오프라인: 매장 키워드가 포함되면 '오프라인' 단일 덩어리로 합산
-  // 미매칭: 기본값 '오프라인'으로 처리
-  // ──────────────────────────────────────────────────────────────────
-  const s = String(ch || '').replace(/\s+/g, '');        // 공백 제거 (대소문자 유지)
-  const sl = s.toLowerCase();                              // 영문 대소문자 무시용
-
-  // ① 온라인 계열 — 키워드 포함 시 독립 채널 분류 (우선순위 순)
-  if (s.includes('카카오선물하기'))  return '카카오선물하기';
-  if (s.includes('스마트스토어'))    return '스마트스토어';
-  if (s.includes('통합몰'))          return '통합몰';
-  if (sl.includes('29cm') || s.includes('이십구센치')) return '29CM';
-
-  // ② 오프라인 계열 — 매장 키워드 포함 시 '오프라인' 단일 합산
-  if (s.includes('명동점') || s.includes('홍대점') ||
-      s.includes('성수점') || s.includes('분당스퀘어점')) return '오프라인';
-
-  // ③ 기본값: 위 키워드에 해당하지 않으면 오프라인으로 처리
-  //    ⚠️ 새 채널/매장 추가 시 위 조건에 키워드를 반드시 추가하세요
+  var s  = String(ch||'').replace(/\s+/g,'');
+  var sl = s.toLowerCase();
+  if (s.indexOf('카카오선물하기')!==-1) return '카카오선물하기';
+  if (s.indexOf('스마트스토어')  !==-1) return '스마트스토어';
+  if (s.indexOf('통합몰')        !==-1) return '통합몰';
+  if (sl.indexOf('29cm')!==-1||s.indexOf('이십구센치')!==-1) return '29CM';
+  if (s.indexOf('명동')    !==-1||s.indexOf('홍대')   !==-1||
+      s.indexOf('성수')    !==-1||s.indexOf('분당')   !==-1||
+      s.indexOf('오프라인')!==-1||s.indexOf('매장')   !==-1||
+      s.indexOf('직영')    !==-1) return '오프라인';
   return '오프라인';
 }
 
+// ── CSV 로드 ──────────────────────────────────────────────────────────────
 function fetchCSV(url) {
-  return new Promise((resolve,reject) => {
-    Papa.parse(url, {
+  return new Promise(function(resolve,reject){
+    Papa.parse(url,{
       download:true, header:true, skipEmptyLines:true,
-      transformHeader: h => h.trim(),
-      complete: r => resolve(r.data),
-      error:    e => reject(new Error(e.message||String(e))),
+      transformHeader:function(h){ return String(h).trim(); },
+      complete:function(r){ resolve(r.data||[]); },
+      error:function(e){ reject(new Error(e.message||String(e))); },
     });
   });
 }
 
-function setStatus(type, msg) {
-  const bar = document.getElementById('status-bar');
-  bar.querySelector('.dot').className = 'dot '+type;
-  bar.className = type;
-  document.getElementById('status-msg').textContent = msg;
+// ── 상태바 ────────────────────────────────────────────────────────────────
+function setStatus(type,msg){
+  var bar=document.getElementById('status-bar'); if(!bar)return;
+  var dot=bar.querySelector('.dot'); if(dot)dot.className='dot '+type;
+  bar.className=type;
+  var sm=document.getElementById('status-msg'); if(sm)sm.textContent=msg;
 }
 
-let chartInst = null;
-const PAL = ['#1E2029','#555A6E','#8A8FA3','#B0B5C1','#D1D5DB'];
+// ── 차트 ──────────────────────────────────────────────────────────────────
+var chartInst=null;
+var PAL=['#1E2029','#555A6E','#8A8FA3','#B0B5C1','#D1D5DB'];
 
-function drawChart(labels, salesArr) {
-  const ctx = document.getElementById('daily-chart').getContext('2d');
-  if (chartInst) { chartInst.destroy(); chartInst = null; }
-  if (!labels.length) return;
-  chartInst = new Chart(ctx, {
+function drawChart(labels,salesArr){
+  var canvas=document.getElementById('daily-chart'); if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  if(!labels.length)return;
+  chartInst=new Chart(ctx,{
     type:'bar',
-    data:{labels, datasets:[{data:salesArr, backgroundColor:labels.map((_,k)=>PAL[Math.min(k,PAL.length-1)]), borderRadius:4, borderSkipped:false}]},
+    data:{labels:labels,datasets:[{
+      data:salesArr,
+      backgroundColor:labels.map(function(_,k){return PAL[Math.min(k,PAL.length-1)];}),
+      borderRadius:4,borderSkipped:false,
+    }]},
     options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>fmtM(c.parsed.y)}}},
-      scales:{
-        x:{grid:{display:false},border:{display:false},ticks:{font:{size:11,family:'"Noto Sans KR",sans-serif'},color:'#8A8FA3',maxRotation:0,autoSkip:false}},
-        y:{grid:{color:'#EFEFEF'},border:{display:false},ticks:{font:{size:10},color:'#8A8FA3',callback:v=>(v/1_000_000).toFixed(0)+'백만'}}
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(c){return fmtM(c.parsed.y);}}},
       },
-      layout:{padding:{top:30}}
+      scales:{
+        x:{grid:{display:false},border:{display:false},
+           ticks:{font:{size:11,family:'"Noto Sans KR",sans-serif'},color:'#8A8FA3',maxRotation:0,autoSkip:false}},
+        y:{grid:{color:'#EFEFEF'},border:{display:false},
+           ticks:{font:{size:10},color:'#8A8FA3',callback:function(v){return (v/1000000).toFixed(0)+'백만';}}},
+      },
+      layout:{padding:{top:30}},
     },
     plugins:[{
       id:'topLabel',
-      afterDatasetsDraw(chart){
-        const {ctx:c,data}=chart;
-        chart.getDatasetMeta(0).data.forEach((bar,i)=>{
-          const v=data.datasets[0].data[i]; if(!v) return;
-          c.save(); c.font='600 11px "Noto Sans KR",sans-serif';
-          c.fillStyle='#1E2029'; c.textAlign='center';
-          c.fillText(fmtM(v),bar.x,bar.y-8); c.restore();
+      afterDatasetsDraw:function(chart){
+        var ctx2=chart.ctx,data=chart.data;
+        chart.getDatasetMeta(0).data.forEach(function(bar,i){
+          var v=data.datasets[0].data[i]; if(!v)return;
+          ctx2.save();
+          ctx2.font='600 11px "Noto Sans KR",sans-serif';
+          ctx2.fillStyle='#1E2029';ctx2.textAlign='center';
+          ctx2.fillText(fmtM(v),bar.x,bar.y-8);
+          ctx2.restore();
         });
-      }
-    }]
+      },
+    }],
   });
 }
 
-function renderKPI(totOtb, totQty, totSales) {
-  const st = totOtb>0?totQty/totOtb*100:0;
-  document.getElementById('v-otb').textContent       = fmtN(totOtb);
-  document.getElementById('v-qty').textContent       = fmtN(totQty);
-  document.getElementById('v-sales').textContent     = fmtM(totSales);
-  document.getElementById('v-sales-raw').textContent = totSales>0?fmtMR(totSales):'—';
-  document.getElementById('v-st').textContent        = fmtSt(st);
-  document.getElementById('v-st-sub').textContent    = `${fmtN(totQty)} / ${fmtN(totOtb)} EA`;
+// ── KPI ───────────────────────────────────────────────────────────────────
+function renderKPI(totOtb,totQty,totSales){
+  var st=totOtb>0?totQty/totOtb*100:0;
+  function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  set('v-otb',      fmtN(totOtb));
+  set('v-qty',      fmtN(totQty));
+  set('v-sales',    fmtM(totSales));
+  set('v-sales-raw',totSales>0?fmtMR(totSales):'—');
+  set('v-st',       fmtSt(st));
+  set('v-st-sub',   fmtN(totQty)+' / '+fmtN(totOtb)+' EA');
 }
 
-// 💡 [수정] OTB 데이터가 없는 채널은 대시보드 목록에서 제외 처리
-function renderChannel(byCh, otbMap) {
-  const ALL_ORDER = ['오프라인', '통합몰', '스마트스토어', '카카오선물하기', '29CM'];
-  const BADGE = {'오프라인':'b-off', '통합몰':'b-mall', '스마트스토어':'b-smt', '카카오선물하기':'b-kakao', '29CM':'b-29cm'};
-  let html = '';
-  
-  // OTB가 0보다 크거나, 혹은 실제로 발생한 매출 수량/금액이 있는 유효 채널만 필터링
-  const activeChannels = ALL_ORDER.filter(name => {
-    const otb = otbMap[name] || 0;
-    const qty = byCh[name]?.qty || 0;
-    const sales = byCh[name]?.sales || 0;
-    return otb > 0 || qty > 0 || sales > 0;
+// ── 채널별 요약 ───────────────────────────────────────────────────────────
+function renderChannel(byCh,otbMap,activeChannels){
+  var html='';
+  activeChannels.forEach(function(n){
+    var d=byCh[n]||{qty:0,sales:0};
+    var otb=otbMap[n]||0;
+    var st=otb>0?d.qty/otb*100:0;
+    html+='<tr>'
+      +'<td class="L"><span class="'+CH_BADGE[n]+'">'+n+'</span></td>'
+      +'<td>'+(otb>0?fmtN(otb):'—')+'</td>'
+      +'<td>'+(d.qty>0?fmtN(d.qty):'—')+'</td>'
+      +'<td>'+fmtM(d.sales)+'</td>'
+      +'<td>'+(otb>0?fmtSt(st):'—')+'</td>'
+      +'</tr>';
   });
-
-  activeChannels.forEach(name => {
-    const d = byCh[name] || {qty:0, sales:0};
-    const otb = otbMap[name] || 0;
-    const st = otb > 0 ? d.qty / otb * 100 : 0;
-    html += `<tr><td class="L"><span class="${BADGE[name]}">${name}</span></td><td>${otb>0?fmtN(otb):'—'}</td><td>${d.qty>0?fmtN(d.qty):'—'}</td><td>${fmtM(d.sales)}</td><td>${otb>0?fmtSt(st):'—'}</td></tr>`;
-  });
-  
-  // 온라인 합계 계산 (오프라인을 제외한 활성화된 온라인 채널만 합산)
-  const onlineChannels = activeChannels.filter(n => n !== '오프라인');
-  const onQ = onlineChannels.reduce((sum, n) => sum + (byCh[n]?.qty || 0), 0);
-  const onS = onlineChannels.reduce((sum, n) => sum + (byCh[n]?.sales || 0), 0);
-  const onO = onlineChannels.reduce((sum, n) => sum + (otbMap[n] || 0), 0);
-  
-  if (onlineChannels.length > 0) {
-    html += `<tr class="row-sub"><td class="L">온라인 합계</td><td>${onO>0?fmtN(onO):'—'}</td><td>${onQ>0?fmtN(onQ):'—'}</td><td>${fmtM(onS)}</td><td>${onO>0?fmtSt(onQ/onO*100):'—'}</td></tr>`;
+  var onl=activeChannels.filter(function(n){return n!=='오프라인';});
+  if(onl.length>0){
+    var onQ=onl.reduce(function(s,n){return s+((byCh[n]&&byCh[n].qty)||0);},0);
+    var onS=onl.reduce(function(s,n){return s+((byCh[n]&&byCh[n].sales)||0);},0);
+    var onO=onl.reduce(function(s,n){return s+(otbMap[n]||0);},0);
+    html+='<tr class="row-sub">'
+      +'<td class="L">온라인 합계</td>'
+      +'<td>'+(onO>0?fmtN(onO):'—')+'</td>'
+      +'<td>'+(onQ>0?fmtN(onQ):'—')+'</td>'
+      +'<td>'+fmtM(onS)+'</td>'
+      +'<td>'+(onO>0?fmtSt(onQ/onO*100):'—')+'</td>'
+      +'</tr>';
   }
-  
-  const tO = Object.values(otbMap).reduce((a,v)=>a+v,0);
-  const tQ = Object.values(byCh).reduce((a,v)=>a+(v.qty||0),0);
-  const tS = Object.values(byCh).reduce((a,v)=>a+(v.sales||0),0);
-  
-  html += `<tr class="row-total"><td class="L">전체 합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td></tr>`;
-  document.getElementById('ch-body').innerHTML = html;
+  var tO=Object.values(otbMap).reduce(function(a,v){return a+v;},0);
+  var tQ=Object.values(byCh).reduce(function(a,v){return a+(v.qty||0);},0);
+  var tS=Object.values(byCh).reduce(function(a,v){return a+(v.sales||0);},0);
+  html+='<tr class="row-total">'
+    +'<td class="L">전체 합계</td>'
+    +'<td>'+fmtN(tO)+'</td><td>'+fmtN(tQ)+'</td><td>'+fmtM(tS)+'</td>'
+    +'<td>'+fmtSt(tO>0?tQ/tO*100:0)+'</td></tr>';
+  var el=document.getElementById('ch-body');
+  if(el)el.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:16px;color:#8A8FA3;font-size:11px">채널 데이터 없음</td></tr>';
 }
 
-function renderDaily(byDate, totalOtb) {
-  const sorted=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0]));
-  const labels=[],salesArr=[];
-  let cumQty=0,html='';
-  sorted.forEach(([date,d])=>{
-    cumQty+=d.qty; labels.push(date); salesArr.push(d.sales);
-    html+=`<tr><td class="L" style="font-size:11px">${date}</td><td style="font-size:11px">${fmtN(d.qty)}</td><td style="font-size:11px">${fmtM(d.sales)}</td><td style="font-size:11px">${fmtSt(totalOtb>0?cumQty/totalOtb*100:0)}</td></tr>`;
+// ── 날짜별 추이 ───────────────────────────────────────────────────────────
+function renderDaily(byDate,totalOtb){
+  var sorted=Object.entries(byDate).sort(function(a,b){return a[0].localeCompare(b[0]);});
+  var labels=[],salesArr=[],cumQty=0,html='';
+  sorted.forEach(function(e){
+    var date=e[0],d=e[1];
+    cumQty+=d.qty;labels.push(date);salesArr.push(d.sales);
+    html+='<tr>'
+      +'<td class="L" style="font-size:11px">'+date+'</td>'
+      +'<td style="font-size:11px">'+fmtN(d.qty)+'</td>'
+      +'<td style="font-size:11px">'+fmtM(d.sales)+'</td>'
+      +'<td style="font-size:11px">'+fmtSt(totalOtb>0?cumQty/totalOtb*100:0)+'</td>'
+      +'</tr>';
   });
-  if (sorted.length>1) {
-    const tQ=sorted.reduce((a,e)=>a+e[1].qty,0);
-    const tS=sorted.reduce((a,e)=>a+e[1].sales,0);
-    html+=`<tr class="row-total"><td class="L">합계</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td></td></tr>`;
+  if(sorted.length>1){
+    var tQ=sorted.reduce(function(a,e){return a+e[1].qty;},0);
+    var tS=sorted.reduce(function(a,e){return a+e[1].sales;},0);
+    html+='<tr class="row-total"><td class="L">합계</td><td>'+fmtN(tQ)+'</td><td>'+fmtM(tS)+'</td><td></td></tr>';
   }
-  if (!sorted.length) html=`<tr><td colspan="4" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">CSV_SALE URL 설정 후 표시됩니다</td></tr>`;
-  document.getElementById('dl-body').innerHTML=html;
+  if(!sorted.length)html='<tr><td colspan="4" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">매출 데이터 없음</td></tr>';
+  var el=document.getElementById('dl-body');if(el)el.innerHTML=html;
   drawChart(labels,salesArr);
 }
 
-function renderProducts(gubuMap) {
-  let html='',tO=0,tQ=0,tS=0;
-  Object.values(gubuMap).sort((a,b)=>b.sales-a.sales).forEach(gd=>{
-    const qty = gd.qtyOff + gd.qtyMall + gd.qtySmt + gd.qtyKakao + gd.qty29;
-    const sales = gd.salesOff + gd.salesMall + gd.salesSmt + gd.salesKakao + gd.sales29;
-    const st = gd.otb > 0 ? qty / gd.otb * 100 : 0;
-    const hi = st >= 30;
-    tO += gd.otb; tQ += qty; tS += sales;
-    
-    html += `<tr class="${hi?'row-hi':''}">
-      <td class="nm">${gd.name}</td>
-      <td>${fmtN(gd.otb)}</td>
-      <td>${fmtN(qty)}</td>
-      <td>${fmtM(sales)}</td>
-      <td class="${hi?'hi':''}">${fmtSt(st)}</td>
-      <td class="bl">${gd.qtyOff>0?fmtN(gd.qtyOff):dash}</td>
-      <td>${gd.qtyMall>0?fmtN(gd.qtyMall):dash}</td>
-      <td>${gd.qtySmt>0?fmtN(gd.qtySmt):dash}</td>
-      <td>${gd.qtyKakao>0?fmtN(gd.qtyKakao):dash}</td>
-      <td>${gd.qty29>0?fmtN(gd.qty29):dash}</td>
-    </tr>`;
+// ── 품목별 매출 (Bug3: thead·tbody 완전 동기화) ───────────────────────────
+function renderProducts(gubuMap,activeChannels){
+  var prBody=document.getElementById('pr-body');if(!prBody)return;
+
+  // ★ Bug3: parentElement로 table 탐색 (closest 대신 명시적 접근)
+  var el=prBody;
+  while(el&&el.tagName!=='TABLE')el=el.parentElement;
+  if(el){
+    var thead=el.querySelector('thead');
+    if(thead){
+      var rows=thead.querySelectorAll('tr');
+      // 1행: 채널 그룹 헤더 colspan 수정
+      if(rows[0]){
+        var ths=rows[0].querySelectorAll('th');
+        var groupTh=ths[ths.length-1];
+        if(groupTh)groupTh.colSpan=activeChannels.length;
+      }
+      // 2행: activeChannels 순서와 1:1 동기화
+      if(rows[1]){
+        rows[1].innerHTML=activeChannels.map(function(n,i){
+          return '<th'+(i===0?' class="bl"':'')+'>'+n+'</th>';
+        }).join('');
+      }
+    }
+  }
+
+  var totalCols=5+activeChannels.length;
+  var html='',tO=0,tQ=0,tS=0;
+
+  Object.values(gubuMap).sort(function(a,b){return b._sales-a._sales;}).forEach(function(gd){
+    var qty=0,sales=0;
+    ALL_CH.forEach(function(n){qty+=gd[CH_QTY[n]]||0;sales+=gd[CH_SALES[n]]||0;});
+    var st=gd.otb>0?qty/gd.otb*100:0;
+    var hi=st>=30;
+    tO+=gd.otb;tQ+=qty;tS+=sales;
+    // ★ Bug3: activeChannels 순서 그대로 td 생성
+    var chTds=activeChannels.map(function(n,i){
+      var v=gd[CH_QTY[n]]||0;
+      return '<td'+(i===0?' class="bl"':'')+'>'+(v>0?fmtN(v):dash)+'</td>';
+    }).join('');
+    html+='<tr class="'+(hi?'row-hi':'')+'">'
+      +'<td class="nm">'+gd.name+'</td>'
+      +'<td>'+fmtN(gd.otb)+'</td>'
+      +'<td>'+fmtN(qty)+'</td>'
+      +'<td>'+fmtM(sales)+'</td>'
+      +'<td class="'+(hi?'hi':'')+'">'+fmtSt(st)+'</td>'
+      +chTds+'</tr>';
   });
-  html += `<tr class="row-total"><td class="L">합계</td><td>${fmtN(tO)}</td><td>${fmtN(tQ)}</td><td>${fmtM(tS)}</td><td>${fmtSt(tO>0?tQ/tO*100:0)}</td><td class="bl"></td><td></td><td></td><td></td><td></td></tr>`;
-  document.getElementById('pr-body').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">제품 데이터 없음</td></tr>';
+
+  if(!html){
+    html='<tr><td colspan="'+totalCols+'" style="text-align:center;padding:20px;color:#8A8FA3;font-size:11px">제품 데이터 없음</td></tr>';
+  }else{
+    var blankChTds=activeChannels.map(function(_,i){return '<td'+(i===0?' class="bl"':'')+'>—</td>';}).join('');
+    html+='<tr class="row-total"><td class="L">합계</td>'
+      +'<td>'+fmtN(tO)+'</td><td>'+fmtN(tQ)+'</td><td>'+fmtM(tS)+'</td>'
+      +'<td>'+fmtSt(tO>0?tQ/tO*100:0)+'</td>'+blankChTds+'</tr>';
+  }
+  prBody.innerHTML=html;
 }
 
-function showErr(msg, detail) {
+// ── 에러 렌더링 ───────────────────────────────────────────────────────────
+function showErr(msg,detail){
   setStatus('fail','데이터 로드 실패');
-  document.getElementById('page-title').textContent='신상품 매출 리포트';
-  const detail_html = detail ? `<pre>${detail}</pre>` : '';
-  const colspans = {'ch-body':5, 'dl-body':4, 'pr-body':10};
-  Object.entries(colspans).forEach(([id, cols]) => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = `<tr><td colspan="${cols}"><div class="err-box"><b>${msg}</b>${detail_html}</div></td></tr>`;
+  var pt=document.getElementById('page-title');if(pt)pt.textContent='신상품 매출 리포트';
+  var dh=detail?'<pre>'+detail+'</pre>':'';
+  var colspans={'ch-body':5,'dl-body':4,'pr-body':10};
+  Object.entries(colspans).forEach(function(e){
+    var el=document.getElementById(e[0]);
+    if(el)el.innerHTML='<tr><td colspan="'+e[1]+'"><div class="err-box"><b>'+msg+'</b>'+dh+'</div></td></tr>';
   });
 }
 
-async function init() {
+// ── 메인 ─────────────────────────────────────────────────────────────────
+async function init(){
   setStatus('spin','데이터 불러오는 중');
-  let prodRows=[],saleRows=[];
-  try {
-    const promises=[fetchCSV(CSV_PROD)];
-    if (CSV_SALE) promises.push(fetchCSV(CSV_SALE));
-    const results=await Promise.all(promises);
-    prodRows=results[0]||[];
-    saleRows=results[1]||[];
-  } catch(e) {
+  var prodRows=[],saleRows=[];
+
+  try{
+    var promises=[fetchCSV(CSV_PROD)];
+    if(CSV_SALE)promises.push(fetchCSV(CSV_SALE));
+    var results=await Promise.all(promises);
+    function clean(arr){
+      return(arr||[]).filter(function(r){
+        return r&&Object.values(r).some(function(v){return String(v||'').trim()!=='';});
+      });
+    }
+    prodRows=clean(results[0]);
+    saleRows=clean(results[1]);
+  }catch(e){
     showErr('CSV 불러오기 실패 — 구글 시트 웹에 게시(CSV) 설정 확인',e.message);
     return;
   }
 
-  if (!prodRows.length) { showErr('출시상품데이터가 비어있습니다'); return; }
+  if(!prodRows.length){showErr('출시상품데이터가 비어있습니다');return;}
 
-  const pH=detectHeaders(prodRows);
-  const sH=saleRows.length?detectHeaders(saleRows):{};
+  var pH=detectHeaders(prodRows);
+  var sH=saleRows.length?detectHeaders(saleRows):{};
+  // F12 콘솔 — 헤더 매핑 & 첫 행 샘플로 매핑 이상 여부 즉시 확인 가능
+  console.log('[PROD헤더]',JSON.stringify(pH));
+  console.log('[SALE헤더]',JSON.stringify(sH));
+  if(saleRows.length)console.log('[SALE1행]',JSON.stringify(saleRows[0]));
 
-  let theme='';
-  const codeMap={}, gubuMap={};
+  // ── 출시상품 처리 ─────────────────────────────────────────────────────
+  var theme='';
+  var codeMap={},gubuMap={};
 
-  prodRows.forEach(r=>{
-    const code=g(r,pH,'code'); if(!code) return;
-    if(!theme) theme=g(r,pH,'theme');
-    const gubu=g(r,pH,'gubu')||g(r,pH,'name')||code;
-    const otbOff=toI(g(r,pH,'otb_off'));
-    const otbMall=toI(g(r,pH,'otb_mall'));
-    const otbSmt=toI(g(r,pH,'otb_smt'));
-    const otbRaw=toI(g(r,pH,'otb_all'));
-    const otbAll=otbRaw>0?otbRaw:(otbOff+otbMall+otbSmt);
-    codeMap[code]={gubu,otbOff,otbMall,otbSmt};
-    
-    if(!gubuMap[gubu]) gubuMap[gubu]={
-      name:gubu, otb:0, otbOff:0, otbMall:0, otbSmt:0,
-      qtyOff:0, qtyMall:0, qtySmt:0, qtyKakao:0, qty29:0,
-      salesOff:0, salesMall:0, salesSmt:0, salesKakao:0, sales29:0, sales:0
-    };
-    gubuMap[gubu].otb+=otbAll; gubuMap[gubu].otbOff+=otbOff; gubuMap[gubu].otbMall+=otbMall; gubuMap[gubu].otbSmt+=otbSmt;
+  prodRows.forEach(function(r){
+    try{
+      // 코드: NFC 정규화 + 공백 완전 제거
+      var code=String(g(r,pH,'code')||'').normalize('NFC').replace(/\s+/g,'');
+      if(!code)return;
+      if(!theme)theme=g(r,pH,'theme');
+
+      var gubu=g(r,pH,'gubu')||g(r,pH,'name')||code;
+      var otbOff =toI(g(r,pH,'otb_off'));
+      var otbMall=toI(g(r,pH,'otb_mall'));
+      var otbSmt =toI(g(r,pH,'otb_smt'));
+      var otbRaw =toI(g(r,pH,'otb_all'));
+      var otbAll =otbRaw>0?otbRaw:(otbOff+otbMall+otbSmt);
+
+      codeMap[code]={gubu:gubu,otbOff:otbOff,otbMall:otbMall,otbSmt:otbSmt};
+
+      if(!gubuMap[gubu])gubuMap[gubu]={
+        name:gubu,otb:0,
+        qtyOff:0,qtyMall:0,qtySmt:0,qtyKakao:0,qty29:0,
+        salesOff:0,salesMall:0,salesSmt:0,salesKakao:0,sales29:0,
+        _sales:0,
+      };
+      gubuMap[gubu].otb+=otbAll;
+    }catch(e){console.warn('[PROD오류]',e.message,r);}
   });
 
-  const titleText=theme||'신상품 매출 리포트';
-  document.getElementById('page-title').textContent=titleText;
+  var titleText=theme||'신상품 매출 리포트';
+  var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=titleText;
   document.title=titleText+' — Business Management';
-  document.getElementById('footer-txt').textContent='Business Management · '+titleText;
+  var ftEl=document.getElementById('footer-txt');if(ftEl)ftEl.textContent='Business Management · '+titleText;
 
-  const byDate={};
-  
-  const byCh={
-    '오프라인':{qty:0,sales:0},
-    '통합몰':{qty:0,sales:0},
-    '스마트스토어':{qty:0,sales:0},
-    '카카오선물하기':{qty:0,sales:0},
-    '29CM':{qty:0,sales:0}
+  // ── 매출 처리 ─────────────────────────────────────────────────────────
+  var byDate={};
+  var byCh={
+    '오프라인':{qty:0,sales:0},'통합몰':{qty:0,sales:0},
+    '스마트스토어':{qty:0,sales:0},'카카오선물하기':{qty:0,sales:0},'29CM':{qty:0,sales:0},
   };
 
-  saleRows.forEach(r=>{
-    const date=toMMDD(g(r,sH,'date')); if(!date) return;
-    const ch=g(r,sH,'channel');
-    const code=g(r,sH,'sale_code');
-    const qty=toI(g(r,sH,'qty'));
-    const sales=toN(g(r,sH,'sales'));
-    const gubu=g(r,sH,'sale_gubu')||codeMap[code]?.gubu||'';
-    const bkt=toBucket(ch);
-    
-    if(!byDate[date]) byDate[date]={qty:0,sales:0};
-    byDate[date].qty+=qty; byDate[date].sales+=sales;
-    if(byCh[bkt]) { byCh[bkt].qty+=qty; byCh[bkt].sales+=sales; }
-    
-    if(gubu&&gubuMap[gubu]){
-      if(bkt==='오프라인')          {gubuMap[gubu].qtyOff+=qty; gubuMap[gubu].salesOff+=sales;}
-      else if(bkt==='통합몰')       {gubuMap[gubu].qtyMall+=qty;gubuMap[gubu].salesMall+=sales;}
-      else if(bkt==='스마트스토어')  {gubuMap[gubu].qtySmt+=qty; gubuMap[gubu].salesSmt+=sales;}
+  saleRows.forEach(function(r){
+    try{
+      var date=toMMDD(g(r,sH,'date'));if(!date)return;
+      var ch   =g(r,sH,'channel');
+      // 코드: 출시상품과 동일한 방식으로 정규화
+      var code =String(g(r,sH,'sale_code')||'').normalize('NFC').replace(/\s+/g,'');
+      var qty  =toI(g(r,sH,'qty'));
+      var sales=toN(g(r,sH,'sales'));
+
+      // ★ Bug1 핵심 수정: codeMap 조회를 1순위로 — 가장 신뢰할 수 있는 조인 키
+      // 이전 방식(sale_gubu 1순위)은 시트별 구분자 표기 불일치 시 key가 어긋나 OTB=0 발생
+      var gubu='';
+      if(code&&codeMap[code]){
+        gubu=codeMap[code].gubu;      // ★ 1순위: 코드→product sheet 구분자(권위있는 키)
+      }
+      if(!gubu)gubu=g(r,sH,'sale_gubu'); // 2순위: 매출 시트 구분자 (코드 미매칭 시 폴백)
+      if(!gubu)gubu=code||'기타';         // 최종: 코드 자체 or 기타
+
+      var bkt=toBucket(ch);
+
+      if(!byDate[date])byDate[date]={qty:0,sales:0};
+      byDate[date].qty+=qty;byDate[date].sales+=sales;
+
+      if(byCh[bkt]){byCh[bkt].qty+=qty;byCh[bkt].sales+=sales;}
+
+      if(!gubuMap[gubu])gubuMap[gubu]={
+        name:gubu,otb:0,
+        qtyOff:0,qtyMall:0,qtySmt:0,qtyKakao:0,qty29:0,
+        salesOff:0,salesMall:0,salesSmt:0,salesKakao:0,sales29:0,
+        _sales:0,
+      };
+      if     (bkt==='오프라인')    {gubuMap[gubu].qtyOff  +=qty;gubuMap[gubu].salesOff  +=sales;}
+      else if(bkt==='통합몰')      {gubuMap[gubu].qtyMall +=qty;gubuMap[gubu].salesMall +=sales;}
+      else if(bkt==='스마트스토어'){gubuMap[gubu].qtySmt  +=qty;gubuMap[gubu].salesSmt  +=sales;}
       else if(bkt==='카카오선물하기'){gubuMap[gubu].qtyKakao+=qty;gubuMap[gubu].salesKakao+=sales;}
-      else if(bkt==='29CM')         {gubuMap[gubu].qty29+=qty;  gubuMap[gubu].sales29+=sales;}
-      gubuMap[gubu].sales+=sales;
-    }
+      else if(bkt==='29CM')        {gubuMap[gubu].qty29   +=qty;gubuMap[gubu].sales29   +=sales;}
+      gubuMap[gubu]._sales+=sales;
+
+    }catch(e){console.warn('[SALE오류]',e.message,r);}
   });
 
-  const otbMap={
-    '오프라인':     prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_off')),0),
-    '통합몰':       prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_mall')),0),
-    '스마트스토어': prodRows.reduce((a,r)=>a+toI(g(r,pH,'otb_smt')),0),
-    '카카오선물하기': 0, 
-    '29CM':         0
+  // ★ Bug2: OTB 합산 — exact+fuzzy 탐색으로 감지된 컬럼 사용
+  var otbMap={
+    '오프라인':      prodRows.reduce(function(a,r){return a+toI(g(r,pH,'otb_off'));},0),
+    '통합몰':        prodRows.reduce(function(a,r){return a+toI(g(r,pH,'otb_mall'));},0),
+    '스마트스토어':  prodRows.reduce(function(a,r){return a+toI(g(r,pH,'otb_smt'));},0),
+    '카카오선물하기': 0,
+    '29CM':          0,
   };
-  const totalOtb  =Object.values(otbMap).reduce((a,v)=>a+v,0);
-  const totalQty  =Object.values(byDate).reduce((a,d)=>a+d.qty,0);
-  const totalSales=Object.values(byDate).reduce((a,d)=>a+d.sales,0);
+  console.log('[PROD헤더OTB] off='+pH.otb_off+' mall='+pH.otb_mall+' smt='+pH.otb_smt);
+  console.log('[OTB맵]',JSON.stringify(otbMap));
+
+  // totalOtb: 채널별 합산 우선, 0이면 gubuMap에서 폴백
+  var totalOtb=otbMap['오프라인']+otbMap['통합몰']+otbMap['스마트스토어'];
+  if(totalOtb===0)totalOtb=Object.values(gubuMap).reduce(function(a,gd){return a+gd.otb;},0);
+
+  var totalQty  =Object.values(byDate).reduce(function(a,d){return a+d.qty;},0);
+  var totalSales=Object.values(byDate).reduce(function(a,d){return a+d.sales;},0);
+
+  // ★ Bug3: activeChannels 1회 산출 → 두 렌더 함수에 공유
+  var activeChannels=ALL_CH.filter(function(n){
+    return (otbMap[n]||0)>0||(byCh[n]&&byCh[n].qty>0)||(byCh[n]&&byCh[n].sales>0);
+  });
+  if(!activeChannels.length)activeChannels=ALL_CH.slice();
 
   renderKPI(totalOtb,totalQty,totalSales);
-  renderChannel(byCh,otbMap);
+  renderChannel(byCh,otbMap,activeChannels);
   renderDaily(byDate,totalOtb);
-  renderProducts(gubuMap);
+  renderProducts(gubuMap,activeChannels);
 
-  const now=new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  setStatus('ok',`마지막 업데이트: ${now} · 제품 ${prodRows.length}행 · 매출 ${saleRows.length}행`);
+  var now=new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  setStatus('ok','마지막 업데이트: '+now+' · 제품 '+prodRows.length+'행 · 매출 '+saleRows.length+'행');
 }
 
 init();
+
 </script>
 </body>
 </html>
