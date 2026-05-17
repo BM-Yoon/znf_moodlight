@@ -176,7 +176,7 @@ tr:last-child td{border-bottom:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ⚠️ 여기에 구글 시트 웹에 게시(CSV) 주소 한 쌍을 각각 넣어주세요!
+// 💡 정상적인 작은따옴표로 주소 연동 처리 완료했습니다.
 const CSV_PROD = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRY1kMxejp5R2-9gsTz_MP7uO-a-6Ep3BEMZpdpSX_KjB0ca6bxXV4nRu1ZeWVi3A/pub?gid=804611156&single=true&output=csv';
 const CSV_SALE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRY1kMxejp5R2-9gsTz_MP7uO-a-6Ep3BEMZpdpSX_KjB0ca6bxXV4nRu1ZeWVi3A/pub?gid=2099164386&single=true&output=csv';
 
@@ -312,13 +312,11 @@ function renderKPI(totOtb, totQty, totSales) {
   document.getElementById('v-st-sub').textContent    = `${fmtN(totQty)} / ${fmtN(totOtb)} EA`;
 }
 
-// 💡 [수정] OTB 데이터가 없는 채널은 대시보드 목록에서 제외 처리
 function renderChannel(byCh, otbMap) {
   const ALL_ORDER = ['오프라인', '통합몰', '스마트스토어', '카카오선물하기', '29CM'];
   const BADGE = {'오프라인':'b-off', '통합몰':'b-mall', '스마트스토어':'b-smt', '카카오선물하기':'b-kakao', '29CM':'b-29cm'};
   let html = '';
   
-  // OTB가 0보다 크거나, 혹은 실제로 발생한 매출 수량/금액이 있는 유효 채널만 필터링
   const activeChannels = ALL_ORDER.filter(name => {
     const otb = otbMap[name] || 0;
     const qty = byCh[name]?.qty || 0;
@@ -333,7 +331,6 @@ function renderChannel(byCh, otbMap) {
     html += `<tr><td class="L"><span class="${BADGE[name]}">${name}</span></td><td>${otb>0?fmtN(otb):'—'}</td><td>${d.qty>0?fmtN(d.qty):'—'}</td><td>${fmtM(d.sales)}</td><td>${otb>0?fmtSt(st):'—'}</td></tr>`;
   });
   
-  // 온라인 합계 계산 (오프라인을 제외한 활성화된 온라인 채널만 합산)
   const onlineChannels = activeChannels.filter(n => n !== '오프라인');
   const onQ = onlineChannels.reduce((sum, n) => sum + (byCh[n]?.qty || 0), 0);
   const onS = onlineChannels.reduce((sum, n) => sum + (byCh[n]?.sales || 0), 0);
